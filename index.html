@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#efe9df">
+<title>물감 한 방울</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="물감 한 방울">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="description" content="물감을 떨어뜨려 번지게 하며 그림을 칠하는 색 퍼즐">
+
+<style>
+:root { --bg: #efe9df; --ink: #3b3530; --muted: #8a8178; --card: #fbf8f3; --line: #e0d8cc; --accent: #d9603b; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif; overscroll-behavior: none; }
+body { display: flex; justify-content: center; }
+#app { width: 100%; max-width: 440px; min-height: 100%; display: flex; flex-direction: column; padding: max(10px, env(safe-area-inset-top)) 14px max(12px, env(safe-area-inset-bottom)); gap: 10px; user-select: none; -webkit-user-select: none; }
+header { display: flex; align-items: center; gap: 6px; }
+header h1 { font-size: 17px; margin: 0; font-weight: 700; letter-spacing: -0.02em; }
+header .stage { color: var(--muted); font-size: 13px; }
+header .sp { flex: 1; }
+.ibtn { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 7px 10px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.info { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 8px 10px; }
+#thumb { width: 56px; height: 76px; border-radius: 10px; background: #f6f1e8; flex: none; }
+.info .txt { flex: 1; min-width: 0; }
+.info .goal { font-size: 13px; color: var(--muted); }
+.info .goal b { color: var(--ink); font-size: 15px; }
+.meter { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; }
+#sim { font-size: 24px; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.meter small { color: var(--muted); font-size: 12px; }
+#dropsLeft { display: flex; gap: 3px; margin-top: 5px; }
+#dropsLeft i { width: 9px; height: 12px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: #b9aea0; display: block; }
+#dropsLeft i.used { opacity: .25; }
+#peek { flex: none; }
+#palette.fpal { width: 100%; }
+.side { display: flex; flex-direction: column; gap: 6px; flex: none; }
+#probeBtn[aria-pressed=true] { background: var(--ink); color: #fff; border-color: var(--ink); }
+#probe { position: absolute; z-index: 3; width: 250px; background: rgba(251,248,243,.97); border: 1px solid var(--line); border-radius: 14px; padding: 9px 11px; box-shadow: 0 8px 22px rgba(60,40,20,.18); font-size: 12px; pointer-events: none; }
+#probe[hidden] { display: none; }
+#probe .pr { display: grid; grid-template-columns: 46px 18px 1fr; gap: 6px; align-items: center; margin: 3px 0; }
+#probe .pr b { font-size: 12px; }
+#probe .sw { width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.1); }
+#probe .bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #ece6dc; }
+#probe .bar i { display: block; height: 100%; }
+#probe .nums { grid-column: 3; color: var(--muted); font-size: 11px; margin-top: -2px; white-space: nowrap; }
+.stagewrap { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+#cv { width: 100%; aspect-ratio: 40 / 54; max-height: 100%; touch-action: none; border-radius: 22px; display: block; }
+#hint { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; font-size: 12px; color: var(--muted); pointer-events: none; transition: opacity .4s; }
+.palette { display: flex; align-items: flex-end; gap: 10px; justify-content: center; width: fit-content; margin: 0 auto; padding: 12px 16px 8px; border-radius: 28px 28px 34px 34px;
+  background: linear-gradient(180deg, #fefdfb, #f1ede6); box-shadow: 0 6px 16px rgba(80,60,40,.14), inset 0 1px 0 #fff, inset 0 -3px 6px rgba(120,100,80,.08); }
+.paint { width: 66px; height: 70px; border: 0; padding: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.paint .well { width: 62px; height: 48px; border-radius: 14px; background: #f3efe8; box-shadow: inset 0 3px 5px rgba(90,70,50,.22), inset 0 -1px 0 rgba(255,255,255,.9), 0 1px 0 rgba(255,255,255,.9); position: relative; transition: transform .15s; }
+.paint .cake { position: absolute; inset: 6px; border-radius: 10px; background:
+  radial-gradient(ellipse 55% 40% at 30% 35%, rgba(255,255,255,.16), transparent 70%),
+  radial-gradient(ellipse 60% 45% at 70% 75%, rgba(0,0,0,.16), transparent 70%),
+  radial-gradient(ellipse 22% 14% at 58% 40%, rgba(0,0,0,.08), transparent 70%), var(--c);
+  box-shadow: inset 0 0 0 1.5px rgba(0,0,0,.12), inset 0 -2px 4px rgba(0,0,0,.12); filter: saturate(.92); }
+.paint span { font-size: 11px; color: var(--muted); }
+.paint[aria-pressed=true] .well { transform: translateY(-3px); box-shadow: inset 0 3px 5px rgba(90,70,50,.22), 0 0 0 2px var(--ink), 0 4px 8px rgba(60,40,20,.18); }
+.paint[aria-pressed=true] .cake { background:
+  radial-gradient(ellipse 45% 30% at 32% 32%, rgba(255,255,255,.38), transparent 70%),
+  radial-gradient(ellipse 60% 45% at 70% 75%, rgba(0,0,0,.12), transparent 70%), var(--c); filter: saturate(1.05); }
+.paint[aria-pressed=true] span { color: var(--ink); font-weight: 700; }
+.actions { display: flex; gap: 8px; margin-top: 12px; }
+.actions button { flex: 1; border: 1px solid var(--line); background: var(--card); border-radius: 14px; padding: 11px 6px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.actions button.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+.actions button:disabled { opacity: .4; }
+.modal { position: fixed; inset: 0; background: rgba(40,32,24,.38); display: flex; align-items: flex-end; justify-content: center; z-index: 10; }
+.modal[hidden] { display: none; }
+.sheet { width: 100%; max-width: 440px; background: var(--card); border-radius: 24px 24px 0 0; padding: 18px 18px max(20px, env(safe-area-inset-bottom)); max-height: 86vh; overflow: auto; }
+.sheet h2 { margin: 0 0 4px; font-size: 18px; }
+.sheet p { margin: 6px 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.big { font-size: 46px; font-weight: 800; letter-spacing: -0.04em; margin: 4px 0; }
+.stars { font-size: 26px; letter-spacing: 4px; color: #e2a93b; }
+.stars .off { color: #ddd3c6; }
+.cmp { display: flex; gap: 10px; justify-content: center; margin: 10px 0; }
+.cmp figure { margin: 0; text-align: center; font-size: 12px; color: var(--muted); }
+.cmp canvas { width: 120px; height: 162px; border-radius: 14px; background: #f6f1e8; display: block; margin-bottom: 4px; }
+.newc { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.chip { display: inline-flex; align-items: center; gap: 6px; background: #f3ede4; border-radius: 999px; padding: 5px 10px 5px 5px; font-size: 13px; font-weight: 600; }
+.chip i { width: 20px; height: 20px; border-radius: 50%; display: block; box-shadow: inset -2px -3px 5px rgba(0,0,0,.15); }
+.row { display: flex; gap: 8px; margin-top: 14px; }
+.row button { flex: 1; border: 1px solid var(--line); background: #fff; border-radius: 14px; padding: 12px; font-size: 15px; font-weight: 600; color: var(--ink); }
+.row button.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+.dex { margin-top: 8px; }
+.dex h3 { font-size: 13px; margin: 14px 0 6px; } .dex h3 small { color: var(--muted); font-weight: 500; margin-left: 4px; }
+.dexrow { display: grid; grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); gap: 6px; }
+.dc { aspect-ratio: 1; border-radius: 50%; border: 0; padding: 0; box-shadow: inset -2px -3px 5px rgba(0,0,0,.14), inset 2px 2px 4px rgba(255,255,255,.3); }
+.dc.no { background: repeating-linear-gradient(45deg, #ece5da 0 4px, #f5f0e8 4px 8px); box-shadow: inset 0 0 0 1.5px #e0d6c8; }
+.dc.sel { outline: 2.5px solid var(--ink); outline-offset: 2px; }
+#dexInfo { position: sticky; top: -18px; z-index: 1; background: var(--card); display: flex; gap: 10px; align-items: center; padding: 8px 0; min-height: 56px; font-size: 13px; color: var(--muted); border-bottom: 1px solid var(--line); }
+#dexInfo .big { width: 40px; height: 40px; border-radius: 50%; display: block; flex: none; box-shadow: inset -3px -4px 7px rgba(0,0,0,.15); }
+#dexInfo .big.no { background: repeating-linear-gradient(45deg, #ece5da 0 5px, #f5f0e8 5px 10px); }
+#dexInfo div { text-align: left; font-size: 12px; }
+.dex h3 small { display: inline; }
+#dexInfo b { display: block; color: var(--ink); font-size: 14px; } #dexInfo span { font-size: 12px; }
+.dex div { text-align: center; font-size: 12px; }
+.dex .sw { width: 56px; height: 56px; margin: 0 auto 5px; border-radius: 50%; box-shadow: inset -6px -8px 12px rgba(0,0,0,.16), inset 5px 6px 10px rgba(255,255,255,.35); }
+.dex .no .sw { background: repeating-linear-gradient(45deg, #ece5da 0 6px, #f4efe7 6px 12px) !important; box-shadow: inset 0 0 0 2px #e0d6c8; }
+.dex .no b { color: #b5aa9c; }
+.dex small { display: block; color: var(--muted); font-size: 10.5px; line-height: 1.3; margin-top: 2px; }
+.levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+.levels button { border: 1px solid var(--line); background: #fff; border-radius: 16px; padding: 8px 6px 10px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.levels button canvas { width: 100%; aspect-ratio: 40/54; display: block; border-radius: 10px; margin-bottom: 6px; background: #f6f1e8; }
+.levels button:disabled { opacity: .45; }
+.levels small { display: block; color: var(--muted); font-weight: 500; font-size: 11px; }
+.levels .st { display: block; color: #e2a93b; font-size: 12px; letter-spacing: 1px; }
+#freeApp { width: 100%; max-width: 560px; min-height: 100%; display: flex; flex-direction: column; padding: max(10px, env(safe-area-inset-top)) 12px max(10px, env(safe-area-inset-bottom)); gap: 8px; user-select: none; -webkit-user-select: none; }
+#freeApp[hidden] { display: none; }
+#app[hidden] { display: none; }
+.fwrap { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+#fcv { width: 100%; aspect-ratio: 3 / 4; max-height: 100%; touch-action: none; border-radius: 6px; display: block; box-shadow: 0 2px 10px rgba(80,60,40,.18); background: #f7f3ea; }
+#fHint { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 11.5px; color: var(--muted); pointer-events: none; transition: opacity .4s; }
+.brushes { display: flex; gap: 6px; justify-content: center; }
+.brushes button { flex: 1; max-width: 96px; border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 6px 4px; font-size: 12px; font-weight: 600; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.brushes button i { display: block; border-radius: 50%; background: #6b625a; }
+.brushes button i.w { background: radial-gradient(circle at 35% 35%, #fff, #b9d4e6); box-shadow: inset 0 0 0 1px #9dbdd3; }
+.brushes button[aria-pressed=true] { border-color: var(--ink); color: var(--ink); background: #fff; }
+.fpal { display: flex; gap: 8px; overflow-x: auto; padding: 10px 12px 6px; border-radius: 22px; background: linear-gradient(180deg, #fefdfb, #f1ede6); box-shadow: 0 4px 12px rgba(80,60,40,.12), inset 0 1px 0 #fff; scrollbar-width: none; }
+.fpal::-webkit-scrollbar { display: none; }
+.fpal .paint { width: 52px; height: 58px; flex: none; }
+.fpal .paint .well { width: 48px; height: 38px; border-radius: 11px; }
+.fpal .paint .cake { inset: 5px; border-radius: 8px; }
+.fpal .paint span { font-size: 10px; white-space: nowrap; max-width: 58px; overflow: hidden; text-overflow: ellipsis; }
+.fpal .paint { width: 58px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header><h1>물감 한 방울</h1><span class="sp"></span><button class="ibtn" id="btnLevels">그림</button><button class="ibtn" id="btnFree">자유</button><button class="ibtn" id="btnGal">작품</button><button class="ibtn" id="btnDex">도감</button></header>
+  <div class="info">
+    <canvas id="thumb" width="112" height="152"></canvas>
+    <div class="txt">
+      <div class="goal"><span id="stageName" style="color:var(--ink);font-weight:700"></span><br><span id="goalTxt">목표와 80% 이상</span></div>
+      <div class="meter"><span id="sim">0%</span><small>지금 비슷함</small></div>
+      <div id="dropsLeft"></div>
+    </div>
+    <div class="side"><button class="ibtn" id="peek">목표 겹쳐 보기</button><button class="ibtn" id="probeBtn" aria-pressed="false">색 확인</button></div>
+  </div>
+  <div class="stagewrap"><canvas id="cv"></canvas><div id="probe" hidden></div><div id="hint">팔레트에서 물감을 고르고 그림을 누르세요 · 누르고 있으면 스며들 자리가 보이고, 오래 누를수록 양이 많아져요</div></div>
+  <div>
+    <div class="palette" id="palette"></div>
+    <div class="actions"><button id="btnUndo">되돌리기</button><button id="btnReset">처음부터</button><button id="btnDone" class="primary">완성!</button></div>
+  </div>
+</div>
+<div id="freeApp" hidden>
+  <header><button class="ibtn" id="fBack">← 퍼즐</button><h1 id="fTitle" style="margin-left:4px">수채화</h1><span class="sp"></span><button class="ibtn" id="fSketch">밑그림</button><button class="ibtn" id="fUndo">되돌리기</button><button class="ibtn" id="fDone" style="background:var(--ink);color:#fff;border-color:var(--ink)">완성</button></header>
+  <div class="fwrap"><canvas id="fcv"></canvas><div id="fHint">손가락으로 칠해요 · 천천히 그을수록 물감이 많이 묻어요 · 두 손가락으로 확대·이동</div></div>
+  <div class="brushes" id="brushes">
+    <button data-b="big" aria-pressed="false"><i style="width:22px;height:22px"></i>큰 붓</button>
+    <button data-b="mid" aria-pressed="true"><i style="width:14px;height:14px"></i>중간 붓</button>
+    <button data-b="fine" aria-pressed="false"><i style="width:7px;height:7px"></i>가는 붓</button>
+    <button data-b="water" aria-pressed="false"><i class="w" style="width:16px;height:16px"></i>물 붓</button>
+  </div>
+  <div class="fpal" id="fpal"></div>
+</div>
+<div class="modal" id="mSketch" hidden><div class="sheet"><h2>밑그림 고르기</h2><p>퍼즐에서 발견한 색은 팔레트에 섞인 물감으로 들어와요.</p><div class="levels" id="sketchGrid"></div><div class="row"><button data-close>닫기</button></div></div></div>
+<div class="modal" id="mResult" hidden><div class="sheet" id="resultBody"></div></div>
+<div class="modal" id="mDex" hidden><div class="sheet"><h2>색 도감</h2><p id="dexCount"></p><div class="dex" id="dexGrid"></div><div class="row"><button data-close>닫기</button></div></div></div>
+<div class="modal" id="mGal" hidden><div class="sheet"><h2>내 작품</h2><p id="galCount"></p><div class="levels" id="galGrid"></div><div class="row"><button data-close>닫기</button></div></div></div>
+<div class="modal" id="mWork" hidden><div class="sheet" style="text-align:center"><img id="workImg" alt="" style="width:100%;max-width:340px;border-radius:18px;display:block;margin:0 auto"><p id="workNote"></p><div class="row"><button data-close>닫기</button><button class="primary" id="workShare">공유하기</button></div></div></div>
+<div class="modal" id="mLevels" hidden><div class="sheet"><h2>그림 고르기</h2><p>80% 이상이면 다음 그림이 열려요.</p><div class="levels" id="levelGrid"></div><div class="row"><button data-close>닫기</button></div></div></div>
+<script>
+// ---- paint engine: deterministic drops, flowing liquid that carries red/yellow/blue pigment ----
+const GW = 40, GH = 54, N = GW * GH;
+const PAPER = [247, 243, 234];
+// RYB cube corners -> RGB (paint-like mixing: blue + yellow = green)
+const C_W = [1, 1, 1], C_R = [0.86, 0.15, 0.13], C_Y = [0.98, 0.84, 0.12], C_B = [0.13, 0.33, 0.70],
+  C_RY = [0.95, 0.50, 0.10], C_RB = [0.45, 0.16, 0.48], C_YB = [0.20, 0.58, 0.25], C_RYB = [0.30, 0.20, 0.12];
+function ryb2rgb(r, y, b) {
+  const out = [0, 0, 0];
+  for (let i = 0; i < 3; i++) {
+    const x0 = C_W[i] * (1 - r) + C_R[i] * r, x1 = C_B[i] * (1 - r) + C_RB[i] * r;
+    const x2 = C_Y[i] * (1 - r) + C_RY[i] * r, x3 = C_YB[i] * (1 - r) + C_RYB[i] * r;
+    const y0 = x0 * (1 - b) + x1 * b, y1 = x2 * (1 - b) + x3 * b;
+    out[i] = y0 * (1 - y) + y1 * y;
+  }
+  return out;
+}
+// pigment amounts -> displayed colour (thin paint = pale tint on paper)
+function pigColor(pr, py, pb) {
+  const t = pr + py + pb; if (t < 1e-4) return PAPER.slice();
+  const m = Math.max(pr, py, pb), c = ryb2rgb(pr / m, py / m, pb / m);
+  const d = Math.pow(Math.min(1, t / 0.32), 0.8);
+  return [0, 1, 2].map(i => Math.round(PAPER[i] * (1 - d) + c[i] * 255 * d));
+}
+function hash(a, b, c) { let h = (a * 374761393 + b * 668265263 + c * 2147483647) | 0; h = (h ^ (h >>> 13)) * 1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+const PIG = { r: 0, y: 1, b: 2 };
+class Canvas {
+  constructor(mask) { this.mask = mask; this.L = new Float32Array(N); this.P = [new Float32Array(N), new Float32Array(N), new Float32Array(N)]; this.steps = 0; }
+  clone() { const c = new Canvas(this.mask); c.L.set(this.L); for (let k = 0; k < 3; k++) c.P[k].set(this.P[k]); return c; }
+  // vol 0..1 (how long pressed), h 0..1 (how high it was dropped)
+  drop(col, x, y, vol, h) {
+    const total = 8 + 80 * vol, pv = typeof col === 'string' ? [col === 'r' ? 1 : 0, col === 'y' ? 1 : 0, col === 'b' ? 1 : 0, 1] : col;
+    const spots = [{ x, y, v: total * (1 - 0.35 * h), r: 1.2 + 1.6 * vol + 4.5 * h }];
+    const n = Math.round(h * 7);
+    for (let i = 0; i < n; i++) { const a = hash(x, y, i * 7 + 1) * Math.PI * 2, d = (2.2 + 2.6 * hash(x, y, i * 7 + 3)) * (1 + 3 * h) + 1.2 * vol;
+      spots.push({ x: x + Math.cos(a) * d, y: y + Math.sin(a) * d, v: total * 0.35 * h / n, r: 0.8 + 0.8 * hash(x, y, i * 7 + 5) }); }
+    for (const s of spots) {
+      const R = Math.ceil(s.r * 2.2), cells = []; let wsum = 0;
+      for (let j = Math.floor(s.y) - R; j <= Math.ceil(s.y) + R; j++) for (let i = Math.floor(s.x) - R; i <= Math.ceil(s.x) + R; i++) {
+        if (i < 0 || j < 0 || i >= GW || j >= GH) continue; const c = j * GW + i; if (!this.mask[c]) continue;
+        const dd = ((i - s.x) ** 2 + (j - s.y) ** 2) / (s.r * s.r); if (dd > 4.8) continue; const w = Math.exp(-dd); cells.push([c, w]); wsum += w; }
+      if (!wsum) continue;
+      for (const [c, w] of cells) { const a = s.v * w / wsum; this.L[c] += a; for (let q = 0; q < 3; q++) if (pv[q]) this.P[q][c] += a * pv[q] * pv[3]; }
+    }
+    this.steps = 0;
+  }
+  // one step: wet paint flows downhill in "wetness" (edge fluxes, so no checkerboard), pigment blends between wet neighbours, water slowly dries
+  step() {
+    const cap = 0.3, L = this.L, P = this.P, M = this.mask;
+    const dL = new Float32Array(N), dP = [new Float32Array(N), new Float32Array(N), new Float32Array(N)]; let moved = 0;
+    const edge = (c, n) => {
+      const a = L[c], b = L[n];
+      // liquid flow from the wetter cell, only above the paper's holding capacity
+      const hi = a > b ? c : n, lo = a > b ? n : c, Lh = Math.max(a, b), Ll = Math.min(a, b);
+      if (Lh > cap) { const f = 0.24 * Math.min(Lh - cap, Lh - Ll); if (f > 1e-5) { const fr = f / Lh; dL[hi] -= f; dL[lo] += f; for (let k = 0; k < 3; k++) { const p = P[k][hi] * fr; dP[k][hi] -= p; dP[k][lo] += p; } moved += f; } }
+      // wet-on-wet blending of colour
+      const w = Math.min(a, b); if (w > 0.06) { for (let k = 0; k < 3; k++) { const ca = P[k][c] / a, cb = P[k][n] / b, f = 0.12 * (ca - cb) * w; dP[k][c] -= f; dP[k][n] += f; } }
+    };
+    for (let c = 0; c < N; c++) { if (!M[c]) continue; const x = c % GW; if (x < GW - 1 && M[c + 1]) edge(c, c + 1); if (c + GW < N && M[c + GW]) edge(c, c + GW); }
+    for (let c = 0; c < N; c++) { if (!M[c]) continue; L[c] = Math.max(0, L[c] + dL[c]) * 0.997; for (let k = 0; k < 3; k++) P[k][c] = Math.max(0, P[k][c] + dP[k][c]); }
+    this.steps++; return moved;
+  }
+  settle(max = 420) { let i = 1; for (; i <= max; i++) if (this.step() < 0.01 && i > 61) break; return Math.min(i, max); }
+  color(c) { return pigColor(this.P[0][c], this.P[1][c], this.P[2][c]); }
+}
+// ---- perceptual colour difference (CIE Lab) ----
+function lab(rgb) {
+  const f = v => { v /= 255; return v > 0.04045 ? Math.pow((v + 0.055) / 1.055, 2.4) : v / 12.92; };
+  const [r, g, b] = rgb.map(f);
+  let X = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047, Y = r * 0.2126 + g * 0.7152 + b * 0.0722, Z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
+  const h = t => t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116; X = h(X); Y = h(Y); Z = h(Z);
+  return [116 * Y - 16, 500 * (X - Y), 200 * (Y - Z)];
+}
+const dE = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+// how alike two paintings look: compare softened colours, forgive small shifts, judge differences the way eyes do
+function labField(cv) {
+  const A = new Float32Array(N * 3);
+  for (let c = 0; c < N; c++) if (cv.mask[c]) { const v = lab(cv.color(c)); A[c * 3] = v[0]; A[c * 3 + 1] = v[1]; A[c * 3 + 2] = v[2]; }
+  const B = new Float32Array(N * 3), R = 1;
+  for (let c = 0; c < N; c++) { if (!cv.mask[c]) continue; const x = c % GW, y = (c / GW) | 0; let w = 0, s0 = 0, s1 = 0, s2 = 0;
+    for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) { const xx = x + i, yy = y + j; if (xx < 0 || yy < 0 || xx >= GW || yy >= GH) continue; const n = yy * GW + xx; if (!cv.mask[n]) continue; const k = (i || j) ? 0.6 : 1; w += k; s0 += A[n * 3] * k; s1 += A[n * 3 + 1] * k; s2 += A[n * 3 + 2] * k; }
+    B[c * 3] = s0 / w; B[c * 3 + 1] = s1 / w; B[c * 3 + 2] = s2 / w; }
+  return B;
+}
+function diffMap(cv, target) {
+  const M = labField(cv), T = labField(target), out = new Float32Array(N).fill(-1), R = 2;
+  for (let c = 0; c < N; c++) { if (!cv.mask[c]) continue; const x = c % GW, y = (c / GW) | 0; let best = 1e9;
+    for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) { const xx = x + i, yy = y + j; if (xx < 0 || yy < 0 || xx >= GW || yy >= GH) continue; const n = yy * GW + xx; if (!cv.mask[n]) continue;
+      const e = Math.hypot(M[n * 3] - T[c * 3], M[n * 3 + 1] - T[c * 3 + 1], M[n * 3 + 2] - T[c * 3 + 2]) + 2.5 * Math.hypot(i, j); if (e < best) best = e; }
+    out[c] = best; }
+  return out;
+}
+const cellScore = e => e <= 10 ? 1 : e >= 50 ? 0 : 1 - ((e - 10) / 40) ** 1.3;
+function similarity(cv, target) {
+  const d = diffMap(cv, target); let s = 0, n = 0;
+  for (let c = 0; c < N; c++) { if (d[c] < 0) continue; n++; s += cellScore(d[c]); }
+  return n ? s / n : 0;
+}
+
+
+// ---------------- objects (drawn as smooth shapes, units = 40 x 54 grid) ----------------
+const LEVELS = [
+  { id: 'berry', name: '딸기', profile: 'dome', seeds: true,
+    parts: [ { d: 'M19.5 16.5 C29 15 34.5 22 32 32 C29.5 41.5 23 48 19.5 49.5 C16 48 9.5 41.5 7 32 C4.5 22 10 15 19.5 16.5 Z' },
+             { d: 'M19.5 20 L12 15.5 L16.2 15.8 L12.8 11.5 L18 14.2 L19.5 9.2 L21 14.2 L26.2 11.5 L22.8 15.8 L27 15.5 Z', h: 0.5 },
+             { d: 'M18.9 10 L18.9 5.5 Q19.5 4.8 20.1 5.5 L20.1 10 Z', h: 0.4 } ],
+    drops: [['r', 19.5, 32, 1], ['r', 19.5, 26, 0.5], ['y', 19.5, 13.5, 0.35], ['b', 19.5, 13.5, 0.22]] },
+  { id: 'marble', name: '노을 구슬', profile: 'dome',
+    parts: [ { d: 'M19.5 11.5 A16 16 0 1 1 19.49 11.5 Z' } ],
+    drops: [['y', 19.5, 16, 1], ['r', 19.5, 24, 0.9], ['b', 13, 38, 0.7], ['b', 26, 38, 0.7]] },
+  { id: 'umbrella', name: '우산', profile: 'dome', ribs: true,
+    parts: [ { d: 'M3.5 27 C3.5 15 11 8.5 19.5 8.5 C28 8.5 35.5 15 35.5 27 Q31.5 24.6 27.5 27 Q23.5 24.6 19.5 27 Q15.5 24.6 11.5 27 Q7.5 24.6 3.5 27 Z' },
+             { d: 'M18.3 26 L20.7 26 L20.7 41 Q20.7 45.8 16.1 45.8 Q11.8 45.8 11.8 41.4 L11.8 39.4 L14.2 39.4 L14.2 41.4 Q14.2 43.4 16.1 43.4 Q18.3 43.4 18.3 41 Z', h: 0.6 } ],
+    drops: [['b', 12, 18, 1], ['r', 27, 18, 1], ['y', 19.5, 37, 0.45]] },
+  { id: 'carrot', name: '당근', profile: 'dome',
+    parts: [ { d: 'M12 19 C12 16.5 27 16.5 27 19 C27 27 22 42 19.5 50 C17 42 12 27 12 19 Z' },
+             { d: 'M18.4 18 C16 13 12 10 11 5 C14 7 17.5 11 19.5 16 C20.5 10 21 6 22.5 3 C23 8 22 12 21 17 C23.5 13 27 10.5 30 10 C27.5 13 24 15.5 21.5 18.5 Z', h: 0.45 } ],
+    drops: [['y', 19.5, 25, 1], ['r', 19.5, 31, 0.8], ['y', 19.5, 15, 0.45], ['b', 19.5, 15, 0.3]] },
+  { id: 'apple', name: '사과', profile: 'dome',
+    parts: [ { d: 'M19.5 19 C24 15.5 34 16 34.5 27 C35 38 28 47 23.5 47 C21.5 47 21 46 19.5 46 C18 46 17.5 47 15.5 47 C11 47 4 38 4.5 27 C5 16 15 15.5 19.5 19 Z' },
+             { d: 'M18.8 20 C18.6 15 18.2 12 17 9.5 L18.6 9 C20 11.5 20.4 15 20.3 20 Z', h: 0.35 },
+             { d: 'M22 13.5 C24 9 29 8 32 9 C30.5 12.5 26 15 22 13.5 Z', h: 0.4 } ],
+    drops: [['r', 14, 30, 1], ['r', 21, 37, 0.6], ['y', 26, 25, 0.55], ['y', 27, 11, 0.12], ['b', 28, 11, 0.08], ['r', 18.5, 13, 0], ['y', 18.5, 14, 0], ['b', 18.5, 15, 0]] },
+  { id: 'fish', name: '물고기', profile: 'dome',
+    parts: [ { d: 'M5 27 C9 18.5 20 17.5 27 25 L34.5 18.5 C33.5 24 33.5 30 34.5 35.5 L27 29 C20 36.5 9 35.5 5 27 Z' },
+             { d: 'M14 20.5 C16 15 21 13.5 24 14.5 C22 16 20.5 18.5 20 21 Z', h: 0.4 },
+             { d: 'M15 33.5 C16 37 18.5 39 21 39.5 C20 37.5 19.5 35.5 19.6 33.2 Z', h: 0.4 } ],
+    drops: [['y', 11, 27, 0.8], ['r', 18, 27, 0.8], ['b', 33.5, 27, 0.15], ['b', 20, 16.5, 0.15], ['b', 18.5, 36.5, 0.1]] },
+  { id: 'flower', name: '화분 꽃', profile: 'dome',
+    parts: [ { d: 'M19.5 6 C23 6 23.5 9.5 22.5 11.5 C25 9.5 28.5 10.5 28.5 14 C28.5 17 25.5 17.5 24 17.5 C26 19 26 23 22.5 23.5 C21 23.8 20 22.8 19.5 21.5 C19 22.8 18 23.8 16.5 23.5 C13 23 13 19 15 17.5 C13.5 17.5 10.5 17 10.5 14 C10.5 10.5 14 9.5 16.5 11.5 C15.5 9.5 16 6 19.5 6 Z' },
+             { d: 'M18.8 21 L20.2 21 L20.2 38 L18.8 38 Z', h: 0.4 },
+             { d: 'M19.6 31 C22 27 26 25.5 29 26 C27 29.5 23 31.5 19.6 31 Z', h: 0.4 },
+             { d: 'M19.4 34 C17 30.5 13 29.5 10.5 30 C12.5 33 16 35 19.4 34 Z', h: 0.4 },
+             { d: 'M11 37 L28 37 L26 50 L13 50 Z', h: 0.8 } ],
+    drops: [['r', 19.5, 14.5, 0.35], ['y', 19.5, 14.5, 0], ['y', 21, 29, 0.35], ['b', 24, 28.5, 0.2], ['b', 15, 31.5, 0.15], ['r', 15, 43, 0.6], ['y', 24, 43, 0.6], ['b', 19.5, 47, 0.35]] },
+  { id: 'butterfly', name: '나비', profile: 'dome',
+    parts: [ { d: 'M19 26 C15 15 8 9 4 12 C1.5 16 5 24 18.5 27.5 C8 29 4 35 6 39 C9 42 15 38 19 29 Z' },
+             { d: 'M20 26 C24 15 31 9 35 12 C37.5 16 34 24 20.5 27.5 C31 29 35 35 33 39 C30 42 24 38 20 29 Z' },
+             { d: 'M18.6 18 C18.6 16.5 20.4 16.5 20.4 18 L20.4 38 C20.4 39.5 18.6 39.5 18.6 38 Z', h: 0.5 } ],
+    drops: [['b', 9, 17, 0.9], ['r', 13, 21, 0.5], ['b', 10, 35, 0.5], ['r', 30, 17, 0.9], ['y', 26, 21, 0.5], ['r', 29, 35, 0.5], ['b', 19.5, 22, 0], ['r', 19.5, 33, 0]] },
+  { id: 'rainbow', name: '무지개', profile: 'dome',
+    parts: [ { d: 'M3 36 A16.5 16.5 0 0 1 36 36 L29 36 A9.5 9.5 0 0 0 10 36 Z' },
+             { paint: false, d: 'M1.5 38 C1.5 34.5 4.5 33 7 34 C8 31.5 12 31.5 13 34.5 C15.5 34 16.5 36.5 15.5 38.5 C15 40.5 13 40.8 11.5 40.5 L4 40.5 C2.5 40.5 1.5 39.5 1.5 38 Z', h: 0.6 },
+             { paint: false, d: 'M38 38 C38 34.5 35 33 32.5 34 C31.5 31.5 27.5 31.5 26.5 34.5 C24 34 23 36.5 24 38.5 C24.5 40.5 26.5 40.8 28 40.5 L35.5 40.5 C37 40.5 38 39.5 38 38 Z', h: 0.6 } ],
+    drops: [['r', 7, 30, 0.55], ['y', 13, 22, 0.6], ['y', 19.5, 20, 0.3], ['b', 26, 22, 0.6], ['b', 32, 29, 0.3], ['r', 33, 30, 0.25]] },
+];
+const PAINTS = [ { k: 'r', name: '빨강', css: '#db2621' }, { k: 'y', name: '노랑', css: '#fad61f' }, { k: 'b', name: '파랑', css: '#2154b3' } ];
+const DEX = [{"n":"흐린 빨강","h":"흐린 빨강","f":"빨강","p":[0.667,0,0.333],"t":0.14,"x":"#ce8a99","e":"Rosetti","k":"로제티"},{"n":"맑은 빨강","h":"맑은 빨강","f":"빨강","p":[0.833,0.167,0],"t":0.19,"x":"#e87865","e":"Salmon","k":"연어색"},{"n":"맑은 빨강","h":"맑은 빨강","f":"빨강","p":[0.667,0.167,0.167],"t":0.19,"x":"#d57870","e":"Island Coral","k":"섬 산호"},{"n":"맑은 빨강","h":"맑은 빨강","f":"빨강","p":[1,0,0],"t":0.19,"x":"#e56c66","e":"Coral Commander","k":"산호 대장"},{"n":"흐린 빨강","h":"흐린 빨강","f":"빨강","p":[0.5,0.25,0.25],"t":0.19,"x":"#c07d73","e":"Morocco","k":"모로코"},{"n":"맑은 빨강","h":"맑은 빨강","f":"빨강","p":[0.583,0.167,0.25],"t":0.19,"x":"#c77777","e":"Rosa Chinensis","k":"월계화"},{"n":"맑은 빨강","h":"맑은 빨강","f":"빨강","p":[0.833,0,0.167],"t":0.19,"x":"#d76c71","e":"Fuzzy Wuzzy","k":"보송보송"},{"n":"빨강","h":"빨강","f":"빨강","p":[0.75,0,0.25],"t":0.19,"x":"#ce6d79","e":"First Love","k":"첫사랑"},{"n":"빨강","h":"빨강","f":"빨강","p":[0.833,0.167,0],"t":0.25,"x":"#e45a44","e":"Tiger Lily","k":"참나리"},{"n":"진달래","h":"빨강","f":"빨강","p":[0.667,0,0.333],"t":0.19,"x":"#c26d83","e":"Prehistoric Pink","k":"태고의 분홍"},{"n":"탁한 빨강","h":"탁한 빨강","f":"빨강","p":[0.5,0.167,0.333],"t":0.19,"x":"#b3757f","e":"Cinnapink","k":"시나몬 분홍"},{"n":"빨강","h":"빨강","f":"빨강","p":[0.75,0.167,0.083],"t":0.25,"x":"#da5a4a","e":"Pimento","k":"피멘토"},{"n":"빨강","h":"빨강","f":"빨강","p":[0.583,0.25,0.167],"t":0.25,"x":"#ca634f","e":"Cedar Chest","k":"삼나무 상자"},{"n":"빨강","h":"빨강","f":"빨강","p":[1,0,0],"t":0.25,"x":"#e04b45","e":"Cute Crab","k":"귀여운 게"},{"n":"빨강","h":"빨강","f":"빨강","p":[0.667,0.167,0.167],"t":0.25,"x":"#cc5a52","e":"Indian Red","k":"인디언 레드"},{"n":"빨강","h":"빨강","f":"빨강","p":[0.917,0,0.083],"t":0.25,"x":"#d84b4c","e":"Bento Box","k":"도시락"},{"n":"빨강","h":"빨강","f":"빨강","p":[0.833,0,0.167],"t":0.25,"x":"#cf4b54","e":"Poppy","k":"양귀비"},{"n":"토마토","h":"빨강","f":"빨강","p":[0.75,0.167,0.083],"t":0.32,"x":"#d33827","e":"Lucky Lobster","k":"행운 가재"},{"n":"빨강","h":"빨강","f":"빨강","p":[1,0,0],"t":0.32,"x":"#db2621","e":"Chicken Comb","k":"닭 볏"},{"n":"빨강","h":"빨강","f":"빨강","p":[0.917,0,0.083],"t":0.32,"x":"#d22629","e":"Flaming Cherry","k":"불타는 체리"},{"n":"빨강","h":"빨강","f":"빨강","p":[0.667,0.167,0.167],"t":0.32,"x":"#c33830","e":"Fire Brick","k":"불벽돌"},{"n":"체리","h":"빨강","f":"빨강","p":[0.833,0,0.167],"t":0.32,"x":"#c62733","e":"Crimson Glow","k":"진홍빛"},{"n":"진한 빨강","h":"진한 빨강","f":"빨강","p":[0.75,0,0.25],"t":0.32,"x":"#b8273f","e":"Timeless Beauty","k":"영원한 장미"},{"n":"피치","h":"연한 다홍","f":"다홍","p":[0.75,0.25,0],"t":0.1,"x":"#efae9a","e":"Wax Flower","k":"왁스플라워"},{"n":"연어","h":"맑은 다홍","f":"다홍","p":[0.667,0.333,0],"t":0.14,"x":"#efa080","e":"Dark Salmon","k":"진한 연어"},{"n":"흐린 다홍","h":"흐린 다홍","f":"다홍","p":[0.5,0.333,0.167],"t":0.14,"x":"#d89f85","e":"Apricotta","k":"살구 크림"},{"n":"코랄","h":"맑은 다홍","f":"다홍","p":[0.667,0.333,0],"t":0.19,"x":"#ec8963","e":"Firewatch","k":"불망루"},{"n":"맑은 다홍","h":"맑은 다홍","f":"다홍","p":[0.583,0.333,0.083],"t":0.19,"x":"#e08a67","e":"Canyon Sunset","k":"협곡 노을"},{"n":"맑은 다홍","h":"맑은 다홍","f":"다홍","p":[0.667,0.25,0.083],"t":0.19,"x":"#e08069","e":"In for a Penny","k":"동전 한 닢"},{"n":"맑은 다홍","h":"맑은 다홍","f":"다홍","p":[0.5,0.333,0.167],"t":0.19,"x":"#cf886a","e":"Copper Coin","k":"구리 동전"},{"n":"맑은 다홍","h":"맑은 다홍","f":"다홍","p":[0.667,0.333,0],"t":0.25,"x":"#ea7042","e":"Coral","k":"산호"},{"n":"맑은 다홍","h":"맑은 다홍","f":"다홍","p":[0.583,0.417,0],"t":0.32,"x":"#ec661c","e":"Ferocious Fox","k":"사나운 여우"},{"n":"맑은 다홍","h":"맑은 다홍","f":"다홍","p":[0.583,0.333,0.083],"t":0.25,"x":"#db7046","e":"Koi","k":"비단잉어"},{"n":"테라코타","h":"다홍","f":"다홍","p":[0.5,0.333,0.167],"t":0.25,"x":"#c56e4a","e":"Oak Palace","k":"참나무 궁전"},{"n":"다홍","h":"다홍","f":"다홍","p":[0.667,0.333,0],"t":0.32,"x":"#e7531d","e":"Furious Fox","k":"성난 여우"},{"n":"다홍","h":"다홍","f":"다홍","p":[0.75,0.25,0],"t":0.32,"x":"#e3441f","e":"Hot Shot","k":"뜨거운 한 방"},{"n":"단풍","h":"다홍","f":"다홍","p":[0.583,0.333,0.083],"t":0.32,"x":"#d45323","e":"Salametti","k":"살라미"},{"n":"다홍","h":"다홍","f":"다홍","p":[0.5,0.333,0.167],"t":0.32,"x":"#ba5127","e":"Spice Market","k":"향신료 시장"},{"n":"다홍","h":"다홍","f":"다홍","p":[0.583,0.25,0.167],"t":0.32,"x":"#c0442d","e":"Fox","k":"여우"},{"n":"연한 주황","h":"연한 주황","f":"주황","p":[0.583,0.417,0],"t":0.1,"x":"#f3bb99","e":"Shrimp Toast","k":"새우 토스트"},{"n":"연한 주황","h":"연한 주황","f":"주황","p":[0.5,0.5,0],"t":0.14,"x":"#f5b77e","e":"Sunburst","k":"햇살 번짐"},{"n":"연한 주황","h":"연한 주황","f":"주황","p":[0.583,0.417,0],"t":0.14,"x":"#f1aa80","e":"Peach Taffy","k":"복숭아 사탕"},{"n":"연한 주황","h":"연한 주황","f":"주황","p":[0.5,0.5,0],"t":0.19,"x":"#f4a761","e":"Sandy Brown","k":"모래 갈색"},{"n":"맑은 주황","h":"맑은 주황","f":"주황","p":[0.583,0.417,0],"t":0.19,"x":"#f09662","e":"Ridgeback","k":"리지백"},{"n":"맑은 주황","h":"맑은 주황","f":"주황","p":[0.5,0.5,0],"t":0.25,"x":"#f3943f","e":"Mandarin Rind","k":"귤껍질"},{"n":"맑은 주황","h":"맑은 주황","f":"주황","p":[0.5,0.417,0.083],"t":0.19,"x":"#e09664","e":"Coyote","k":"코요테"},{"n":"주황","h":"맑은 주황","f":"주황","p":[0.5,0.5,0],"t":0.32,"x":"#f2801a","e":"Retro Nectarine","k":"천도복숭아"},{"n":"맑은 주황","h":"맑은 주황","f":"주황","p":[0.417,0.417,0.167],"t":0.19,"x":"#c89362","e":"Butterum","k":"버터 캔디"},{"n":"맑은 주황","h":"맑은 주황","f":"주황","p":[0.583,0.417,0],"t":0.25,"x":"#ee7f41","e":"Spiced up Orange","k":"매콤한 오렌지"},{"n":"맑은 주황","h":"맑은 주황","f":"주황","p":[0.5,0.417,0.083],"t":0.25,"x":"#db7f43","e":"Sweet Potato","k":"고구마"},{"n":"호박","h":"맑은 주황","f":"주황","p":[0.417,0.5,0.083],"t":0.32,"x":"#d7811c","e":"Copious Caramel","k":"듬뿍 캐러멜"},{"n":"흐린 주황","h":"흐린 주황","f":"주황","p":[0.417,0.333,0.25],"t":0.19,"x":"#b4836a","e":"Macaroon","k":"마카롱"},{"n":"주황","h":"주황","f":"주황","p":[0.417,0.417,0.167],"t":0.25,"x":"#bd7b41","e":"Molten Caramel","k":"녹은 캐러멜"},{"n":"주황","h":"주황","f":"주황","p":[0.5,0.417,0.083],"t":0.32,"x":"#d5661e","e":"Chocolate","k":"초콜릿"},{"n":"주황","h":"주황","f":"주황","p":[0.417,0.417,0.167],"t":0.32,"x":"#b0611c","e":"Light Brown","k":"연갈색"},{"n":"아주 연한 귤색","h":"아주 연한 귤색","f":"귤색","p":[0.5,0.5,0],"t":0.07,"x":"#f6d1ac","e":"Peach Puff","k":"복숭아 솜"},{"n":"연한 귤색","h":"연한 귤색","f":"귤색","p":[0.417,0.583,0],"t":0.1,"x":"#f6cf98","e":"Navajo White","k":"나바호 화이트"},{"n":"살구색","h":"연한 귤색","f":"귤색","p":[0.5,0.5,0],"t":0.1,"x":"#f5c598","e":"Chai Latte","k":"차이 라테"},{"n":"연한 귤색","h":"연한 귤색","f":"귤색","p":[0.417,0.583,0],"t":0.14,"x":"#f6c47f","e":"Torchlight","k":"횃불"},{"n":"연한 귤색","h":"연한 귤색","f":"귤색","p":[0.333,0.667,0],"t":0.19,"x":"#f6c362","e":"Sunset Gold","k":"노을 금빛"},{"n":"연한 귤색","h":"연한 귤색","f":"귤색","p":[0.333,0.667,0],"t":0.25,"x":"#f6b841","e":"Solar Power","k":"태양열"},{"n":"연한 귤색","h":"연한 귤색","f":"귤색","p":[0.417,0.583,0],"t":0.19,"x":"#f5b762","e":"Shiny Trumpet","k":"반짝 트럼펫"},{"n":"연한 귤색","h":"연한 귤색","f":"귤색","p":[0.417,0.5,0.083],"t":0.14,"x":"#e6b880","e":"Honey Gold","k":"꿀 금빛"},{"n":"귤색","h":"연한 귤색","f":"귤색","p":[0.333,0.667,0],"t":0.32,"x":"#f6ab1c","e":"Groovy Giraffe","k":"신나는 기린"},{"n":"연한 귤색","h":"연한 귤색","f":"귤색","p":[0.417,0.583,0],"t":0.25,"x":"#f5a940","e":"Safflower","k":"잇꽃"},{"n":"맑은 귤색","h":"맑은 귤색","f":"귤색","p":[0.333,0.583,0.083],"t":0.25,"x":"#e1aa43","e":"Brass Buttons","k":"놋쇠 단추"},{"n":"맑은 귤색","h":"맑은 귤색","f":"귤색","p":[0.417,0.5,0.083],"t":0.19,"x":"#e2a862","e":"Caramel Essence","k":"캐러멜 향"},{"n":"흐린 귤색","h":"흐린 귤색","f":"귤색","p":[0.417,0.417,0.167],"t":0.14,"x":"#d2a87f","e":"Porcini","k":"포르치니"},{"n":"감귤","h":"맑은 귤색","f":"귤색","p":[0.417,0.583,0],"t":0.32,"x":"#f4981b","e":"Burning Trail","k":"불타는 길"},{"n":"맑은 귤색","h":"맑은 귤색","f":"귤색","p":[0.333,0.583,0.083],"t":0.32,"x":"#dc9a1e","e":"End of Summer","k":"여름의 끝"},{"n":"맑은 귤색","h":"맑은 귤색","f":"귤색","p":[0.417,0.5,0.083],"t":0.25,"x":"#dd9641","e":"Caramelise","k":"캐러멜라이즈"},{"n":"맑은 귤색","h":"맑은 귤색","f":"귤색","p":[0.333,0.5,0.167],"t":0.25,"x":"#c59844","e":"Camel Cardinal","k":"낙타 망토"},{"n":"황토","h":"맑은 귤색","f":"귤색","p":[0.333,0.5,0.167],"t":0.32,"x":"#ba8420","e":"Dark Goldenrod","k":"진한 미역취"},{"n":"귤색","h":"귤색","f":"귤색","p":[0.333,0.417,0.25],"t":0.25,"x":"#9f7e45","e":"Hamster Fur","k":"햄스터 털"},{"n":"아주 연한 노랑","h":"아주 연한 노랑","f":"노랑","p":[0,1,0],"t":0.045,"x":"#f8edc0","e":"Lemon Chiffon","k":"레몬 시폰"},{"n":"버터","h":"아주 연한 노랑","f":"노랑","p":[0,1,0],"t":0.07,"x":"#f8eaae","e":"Pale Goldenrod","k":"연한 미역취"},{"n":"레몬빛","h":"아주 연한 노랑","f":"노랑","p":[0,1,0],"t":0.1,"x":"#f8e89a","e":"Drover","k":"소몰이꾼"},{"n":"아주 연한 노랑","h":"아주 연한 노랑","f":"노랑","p":[0,1,0],"t":0.14,"x":"#f8e481","e":"Pasta Luego","k":"파스타"},{"n":"아주 연한 노랑","h":"아주 연한 노랑","f":"노랑","p":[0.333,0.667,0],"t":0.07,"x":"#f7dead","e":"Moccasin","k":"모카신"},{"n":"아주 연한 노랑","h":"아주 연한 노랑","f":"노랑","p":[0,1,0],"t":0.19,"x":"#f9e064","e":"Goldfinch","k":"황금방울새"},{"n":"아주 연한 노랑","h":"아주 연한 노랑","f":"노랑","p":[0.25,0.75,0],"t":0.1,"x":"#f7dc99","e":"Sunbathed","k":"햇볕 쬔"},{"n":"개나리","h":"아주 연한 노랑","f":"노랑","p":[0,1,0],"t":0.25,"x":"#f9db43","e":"Cheese It Up","k":"치즈 듬뿍"},{"n":"아주 연한 노랑","h":"아주 연한 노랑","f":"노랑","p":[0.25,0.583,0.167],"t":0.07,"x":"#e7d9af","e":"Wheat","k":"밀"},{"n":"아주 연한 노랑","h":"아주 연한 노랑","f":"노랑","p":[0.25,0.75,0],"t":0.14,"x":"#f7d580","e":"Popcorn","k":"팝콘"},{"n":"노랑","h":"아주 연한 노랑","f":"노랑","p":[0,1,0],"t":0.32,"x":"#fad61f","e":"Gold","k":"금"},{"n":"아주 연한 노랑","h":"아주 연한 노랑","f":"노랑","p":[0.167,0.833,0],"t":0.19,"x":"#f8d563","e":"Golden Sprinkles","k":"금빛 스프링클"},{"n":"아주 연한 노랑","h":"아주 연한 노랑","f":"노랑","p":[0.167,0.667,0.167],"t":0.1,"x":"#e5d89c","e":"Sunny Glory","k":"햇빛 영광"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0.167,0.833,0],"t":0.25,"x":"#f8cd42","e":"Golden Goose","k":"황금 거위"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0.167,0.667,0.167],"t":0.14,"x":"#dfd084","e":"Hay Day","k":"건초의 날"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0,0.917,0.083],"t":0.32,"x":"#e8d022","e":"Yellow Mellow","k":"노랑 말랑"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0.083,0.833,0.083],"t":0.25,"x":"#e9cf45","e":"Aurora","k":"오로라"},{"n":"해바라기","h":"연한 노랑","f":"노랑","p":[0.167,0.833,0],"t":0.32,"x":"#f8c51e","e":"Sunshine Mellow","k":"햇살 말랑"},{"n":"모래","h":"연한 노랑","f":"노랑","p":[0.333,0.5,0.167],"t":0.1,"x":"#dfc79a","e":"Prairie Land","k":"초원의 땅"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0.333,0.583,0.083],"t":0.14,"x":"#e9c581","e":"Freshly Baked","k":"갓 구운 빵"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0.25,0.667,0.083],"t":0.19,"x":"#e8c565","e":"Honey Crisp","k":"꿀사과"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0.167,0.667,0.167],"t":0.19,"x":"#d8c667","e":"Pirate Treasure","k":"해적 보물"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0.25,0.75,0],"t":0.32,"x":"#f7b91d","e":"Sunflower Valley","k":"해바라기 골짜기"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0.333,0.583,0.083],"t":0.19,"x":"#e5b964","e":"Crisps","k":"감자칩"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0.167,0.75,0.083],"t":0.32,"x":"#e3bb20","e":"Gold Tooth","k":"금니"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0.25,0.667,0.083],"t":0.25,"x":"#e4b944","e":"Honey Glow","k":"꿀빛"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0.333,0.5,0.167],"t":0.14,"x":"#d7ba82","e":"Burly Wood","k":"통나무"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0.25,0.583,0.167],"t":0.19,"x":"#d4ba66","e":"Luxurious","k":"호화로움"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0.167,0.667,0.167],"t":0.25,"x":"#d1bb47","e":"Old Gold","k":"옛 금빛"},{"n":"연한 노랑","h":"연한 노랑","f":"노랑","p":[0.25,0.5,0.25],"t":0.14,"x":"#c7bb85","e":"Golden Mist","k":"금빛 안개"},{"n":"맑은 노랑","h":"맑은 노랑","f":"노랑","p":[0.25,0.667,0.083],"t":0.32,"x":"#e0ad20","e":"Goldenrod","k":"미역취"},{"n":"맑은 노랑","h":"맑은 노랑","f":"노랑","p":[0.167,0.667,0.167],"t":0.32,"x":"#c8af24","e":"Hippie Trail","k":"히피의 길"},{"n":"맑은 노랑","h":"맑은 노랑","f":"노랑","p":[0.333,0.5,0.167],"t":0.19,"x":"#cfaa65","e":"Camel","k":"낙타"},{"n":"맑은 노랑","h":"맑은 노랑","f":"노랑","p":[0.25,0.583,0.167],"t":0.25,"x":"#cbac46","e":"Haystack","k":"건초더미"},{"n":"흐린 노랑","h":"흐린 노랑","f":"노랑","p":[0.333,0.417,0.25],"t":0.14,"x":"#c0a982","e":"Croissant","k":"크루아상"},{"n":"맑은 노랑","h":"맑은 노랑","f":"노랑","p":[0.25,0.5,0.25],"t":0.19,"x":"#baac69","e":"Canadian Maple","k":"캐나다 단풍"},{"n":"머스타드","h":"맑은 노랑","f":"노랑","p":[0.25,0.583,0.167],"t":0.32,"x":"#c29d22","e":"Mustard Seed","k":"겨자씨"},{"n":"맑은 노랑","h":"맑은 노랑","f":"노랑","p":[0.25,0.5,0.25],"t":0.25,"x":"#ab9a49","e":"Gecko","k":"도마뱀붙이"},{"n":"흐린 노랑","h":"흐린 노랑","f":"노랑","p":[0.333,0.417,0.25],"t":0.19,"x":"#b19566","e":"Veranda Gold","k":"베란다 금빛"},{"n":"노랑","h":"노랑","f":"노랑","p":[0.25,0.5,0.25],"t":0.32,"x":"#9b8726","e":"Rich Gold","k":"짙은 금빛"},{"n":"아주 연한 연두","h":"아주 연한 연두","f":"연두","p":[0,0.75,0.25],"t":0.07,"x":"#e4e4b1","e":"Steamy Dumpling","k":"김 나는 만두"},{"n":"아주 연한 연두","h":"아주 연한 연두","f":"연두","p":[0,0.833,0.167],"t":0.1,"x":"#e8e29c","e":"Celery Sceptre","k":"셀러리 지팡이"},{"n":"아주 연한 연두","h":"아주 연한 연두","f":"연두","p":[0,0.833,0.167],"t":0.14,"x":"#e4dd84","e":"Khaki","k":"카키"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0,0.667,0.333],"t":0.1,"x":"#d1dba0","e":"Mermaid Tears","k":"인어의 눈물"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0,0.833,0.167],"t":0.19,"x":"#dfd768","e":"Quince","k":"모과"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0,0.833,0.167],"t":0.25,"x":"#d9d048","e":"Lanky Lemon","k":"길쭉 레몬"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0,0.667,0.333],"t":0.14,"x":"#c5d38a","e":"Sunken Treasure","k":"가라앉은 보물"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0,0.75,0.25],"t":0.19,"x":"#cdd16b","e":"Force of Nature","k":"자연의 힘"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0.167,0.5,0.333],"t":0.1,"x":"#c6ca9f","e":"Seedling","k":"새싹"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0.167,0.583,0.25],"t":0.14,"x":"#cdc886","e":"Royal Goblet","k":"왕의 잔"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0,0.833,0.167],"t":0.32,"x":"#d2c925","e":"Golden Harvest","k":"황금 수확"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0,0.75,0.25],"t":0.25,"x":"#c3c94c","e":"Salsa Verde","k":"초록 살사"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0,0.667,0.333],"t":0.19,"x":"#b7ca6f","e":"Alligator Alley","k":"악어 골목"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0.167,0.583,0.25],"t":0.19,"x":"#c2bc6a","e":"Dark Khaki","k":"진한 카키"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0.167,0.5,0.333],"t":0.14,"x":"#b7bd88","e":"Nile","k":"나일강"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0.083,0.667,0.25],"t":0.25,"x":"#bdbe4c","e":"Celery","k":"셀러리"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0,0.75,0.25],"t":0.32,"x":"#b8c02a","e":"Leafy Woodland","k":"잎 무성한 숲"},{"n":"연한 연두","h":"연한 연두","f":"연두","p":[0.083,0.583,0.333],"t":0.19,"x":"#afbe6e","e":"Savannah Grass","k":"사바나 풀"},{"n":"맑은 연두","h":"맑은 연두","f":"연두","p":[0,0.667,0.333],"t":0.25,"x":"#a8c051","e":"Sapling","k":"어린나무"},{"n":"맑은 연두","h":"맑은 연두","f":"연두","p":[0.083,0.667,0.25],"t":0.32,"x":"#b0b229","e":"Lush Bamboo","k":"우거진 대나무"},{"n":"맑은 연두","h":"맑은 연두","f":"연두","p":[0.167,0.583,0.25],"t":0.25,"x":"#b5af4b","e":"Pickled","k":"피클"},{"n":"연두","h":"맑은 연두","f":"연두","p":[0,0.667,0.333],"t":0.32,"x":"#96b52f","e":"German Hop","k":"독일 홉"},{"n":"녹차","h":"맑은 연두","f":"연두","p":[0.167,0.5,0.333],"t":0.19,"x":"#a5ae6d","e":"Gallant Green","k":"늠름한 초록"},{"n":"맑은 연두","h":"맑은 연두","f":"연두","p":[0.083,0.583,0.333],"t":0.25,"x":"#9db150","e":"Chorus of Frogs","k":"개구리 합창"},{"n":"맑은 연두","h":"맑은 연두","f":"연두","p":[0.167,0.583,0.25],"t":0.32,"x":"#a7a028","e":"Greedy Gecko","k":"욕심쟁이 도마뱀"},{"n":"맑은 연두","h":"맑은 연두","f":"연두","p":[0.083,0.583,0.333],"t":0.32,"x":"#8aa32f","e":"Olive Drab","k":"국방색"},{"n":"맑은 연두","h":"맑은 연두","f":"연두","p":[0.167,0.5,0.333],"t":0.25,"x":"#909e4f","e":"Totally Broccoli","k":"완전 브로콜리"},{"n":"연두","h":"연두","f":"연두","p":[0.167,0.5,0.333],"t":0.32,"x":"#7a8b2d","e":"Pesto di Rucola","k":"루콜라 페스토"},{"n":"아주 연한 초록","h":"아주 연한 초록","f":"초록","p":[0,0.5,0.5],"t":0.045,"x":"#cedfc7","e":"Endive","k":"엔다이브"},{"n":"민트","h":"연한 초록","f":"초록","p":[0,0.5,0.5],"t":0.07,"x":"#bdd7b8","e":"Nature","k":"자연"},{"n":"연한 초록","h":"연한 초록","f":"초록","p":[0,0.583,0.417],"t":0.1,"x":"#c0d5a3","e":"In Good Taste","k":"좋은 취향"},{"n":"연한 초록","h":"연한 초록","f":"초록","p":[0.167,0.417,0.417],"t":0.07,"x":"#c0cbb4","e":"Bok Choy","k":"청경채"},{"n":"연한 초록","h":"연한 초록","f":"초록","p":[0,0.5,0.5],"t":0.1,"x":"#aacda7","e":"Limestoned","k":"석회암"},{"n":"연한 초록","h":"연한 초록","f":"초록","p":[0,0.583,0.417],"t":0.14,"x":"#afcc8d","e":"Greenhorn","k":"풋내기"},{"n":"연한 초록","h":"연한 초록","f":"초록","p":[0,0.417,0.583],"t":0.1,"x":"#a8c6b4","e":"Gum Leaf","k":"유칼립투스 잎"},{"n":"연한 초록","h":"연한 초록","f":"초록","p":[0.167,0.417,0.417],"t":0.1,"x":"#aebea2","e":"Meadow Morn","k":"풀밭의 아침"},{"n":"연한 초록","h":"연한 초록","f":"초록","p":[0.083,0.5,0.417],"t":0.14,"x":"#a5bf8d","e":"Oh Pistachio","k":"오 피스타치오"},{"n":"연한 초록","h":"연한 초록","f":"초록","p":[0,0.5,0.5],"t":0.14,"x":"#92c292","e":"Dark Sea Green","k":"짙은 바다초록"},{"n":"맑은 초록","h":"맑은 초록","f":"초록","p":[0,0.583,0.417],"t":0.19,"x":"#9bc174","e":"Fiddle-Leaf Fig","k":"떡갈고무나무"},{"n":"청자","h":"흐린 초록","f":"초록","p":[0,0.417,0.583],"t":0.14,"x":"#8fb9a3","e":"Lichen","k":"바위이끼"},{"n":"세이지","h":"흐린 초록","f":"초록","p":[0.167,0.417,0.417],"t":0.14,"x":"#97ae8b","e":"Mistletoe","k":"겨우살이"},{"n":"맑은 초록","h":"맑은 초록","f":"초록","p":[0.083,0.5,0.417],"t":0.19,"x":"#8eb173","e":"Sage","k":"세이지"},{"n":"맑은 초록","h":"맑은 초록","f":"초록","p":[0,0.583,0.417],"t":0.25,"x":"#85b456","e":"Makin It Rain","k":"비 내리기"},{"n":"맑은 초록","h":"맑은 초록","f":"초록","p":[0,0.5,0.5],"t":0.19,"x":"#76b47a","e":"Frog Pond","k":"개구리 연못"},{"n":"흐린 초록","h":"흐린 초록","f":"초록","p":[0.167,0.333,0.5],"t":0.14,"x":"#96a99f","e":"Alpine Air","k":"알프스 공기"},{"n":"흐린 초록","h":"흐린 초록","f":"초록","p":[0.083,0.417,0.5],"t":0.19,"x":"#78a482","e":"Green Goddess","k":"초록 여신"},{"n":"풀잎","h":"맑은 초록","f":"초록","p":[0,0.583,0.417],"t":0.32,"x":"#6ca736","e":"Leaf","k":"나뭇잎"},{"n":"맑은 초록","h":"맑은 초록","f":"초록","p":[0.083,0.5,0.417],"t":0.25,"x":"#74a156","e":"Kiwi","k":"키위"},{"n":"맑은 초록","h":"맑은 초록","f":"초록","p":[0,0.5,0.5],"t":0.25,"x":"#56a55e","e":"Muted Green","k":"차분한 초록"},{"n":"쑥","h":"흐린 초록","f":"초록","p":[0.167,0.417,0.417],"t":0.19,"x":"#7d9b71","e":"Sleepy Hollow","k":"잠든 골짜기"},{"n":"흐린 초록","h":"흐린 초록","f":"초록","p":[0.167,0.333,0.5],"t":0.19,"x":"#7c958a","e":"Mother Earth","k":"어머니 대지"},{"n":"탁한 초록","h":"탁한 초록","f":"초록","p":[0,0.417,0.583],"t":0.25,"x":"#529679","e":"Highlands","k":"고원"},{"n":"잿빛","h":"탁한 초록","f":"초록","p":[0.25,0.333,0.417],"t":0.19,"x":"#828a7a","e":"Kosher Khaki","k":"단정한 카키"},{"n":"초록","h":"초록","f":"초록","p":[0.083,0.417,0.5],"t":0.25,"x":"#589069","e":"Leafy","k":"잎사귀"},{"n":"초록","h":"초록","f":"초록","p":[0,0.5,0.5],"t":0.32,"x":"#339440","e":"Forest Green","k":"숲 초록"},{"n":"초록","h":"초록","f":"초록","p":[0.083,0.5,0.417],"t":0.32,"x":"#578f35","e":"Bitter Leaf","k":"쓴 잎"},{"n":"초록","h":"초록","f":"초록","p":[0.167,0.417,0.417],"t":0.25,"x":"#5e8553","e":"Kale","k":"케일"},{"n":"탁한 초록","h":"탁한 초록","f":"초록","p":[0.167,0.333,0.5],"t":0.25,"x":"#5d7e72","e":"Ecological","k":"생태"},{"n":"에메랄드","h":"초록","f":"초록","p":[0,0.417,0.583],"t":0.32,"x":"#2e8261","e":"Elf","k":"요정"},{"n":"숲","h":"초록","f":"초록","p":[0.083,0.417,0.5],"t":0.32,"x":"#367b4d","e":"Amazon","k":"아마존"},{"n":"탁한 초록","h":"탁한 초록","f":"초록","p":[0.25,0.333,0.417],"t":0.25,"x":"#65705f","e":"Italian Basil","k":"이탈리아 바질"},{"n":"솔잎","h":"진한 초록","f":"초록","p":[0.167,0.417,0.417],"t":0.32,"x":"#3d6d32","e":"Botanical","k":"식물원"},{"n":"진한 초록","h":"진한 초록","f":"초록","p":[0.25,0.333,0.417],"t":0.32,"x":"#455340","e":"Verdant Hush","k":"초록 고요"},{"n":"연한 청록","h":"연한 청록","f":"청록","p":[0,0.333,0.667],"t":0.1,"x":"#a6c1bd","e":"Wild Life","k":"야생"},{"n":"흐린 청록","h":"흐린 청록","f":"청록","p":[0,0.333,0.667],"t":0.14,"x":"#8db1b0","e":"Harbour Mist","k":"항구 안개"},{"n":"흐린 청록","h":"흐린 청록","f":"청록","p":[0,0.333,0.667],"t":0.19,"x":"#709fa0","e":"Cadet Blue","k":"사관생도 파랑"},{"n":"탁한 청록","h":"탁한 청록","f":"청록","p":[0,0.333,0.667],"t":0.25,"x":"#4f8b8d","e":"Paradiso","k":"낙원"},{"n":"청록","h":"탁한 청록","f":"청록","p":[0,0.333,0.667],"t":0.32,"x":"#2a7479","e":"Teal","k":"청록"},{"n":"진한 청록","h":"진한 청록","f":"청록","p":[0.167,0.333,0.5],"t":0.32,"x":"#3c6458","e":"June Ivy","k":"6월 담쟁이"},{"n":"하늘색","h":"연한 하늘색","f":"파랑","p":[0,0,1],"t":0.07,"x":"#b8c4da","e":"Light Steel Blue","k":"연한 강철 파랑"},{"n":"연한 하늘색","h":"연한 하늘색","f":"파랑","p":[0,0.167,0.833],"t":0.1,"x":"#a4b9cb","e":"Rendez-Blue","k":"파란 약속"},{"n":"하늘","h":"흐린 하늘색","f":"파랑","p":[0,0,1],"t":0.1,"x":"#a3b4d4","e":"Mont Blanc","k":"몽블랑"},{"n":"흐린 파랑","h":"흐린 파랑","f":"파랑","p":[0,0.25,0.75],"t":0.14,"x":"#8cacba","e":"Equanimity","k":"평정"},{"n":"흐린 파랑","h":"흐린 파랑","f":"파랑","p":[0,0.167,0.833],"t":0.14,"x":"#8aa8c2","e":"Far Horizons","k":"먼 지평선"},{"n":"흐린 파랑","h":"흐린 파랑","f":"파랑","p":[0,0,1],"t":0.14,"x":"#89a1cd","e":"Wisteria Blue","k":"등나무 파랑"},{"n":"흐린 파랑","h":"흐린 파랑","f":"파랑","p":[0,0.25,0.75],"t":0.19,"x":"#6e98ac","e":"Lake Lucerne","k":"루체른 호수"},{"n":"흐린 파랑","h":"흐린 파랑","f":"파랑","p":[0,0.167,0.833],"t":0.19,"x":"#6c93b6","e":"Heavenly Sky","k":"천상의 하늘"},{"n":"흐린 파랑","h":"흐린 파랑","f":"파랑","p":[0.167,0.25,0.583],"t":0.19,"x":"#7a909c","e":"Light Slate Gray","k":"연한 청회색"},{"n":"흐린 파랑","h":"흐린 파랑","f":"파랑","p":[0,0.083,0.917],"t":0.19,"x":"#6b8ebf","e":"Kimono","k":"기모노"},{"n":"탁한 파랑","h":"탁한 파랑","f":"파랑","p":[0.167,0.167,0.667],"t":0.19,"x":"#788baa","e":"English Manor","k":"영국 저택"},{"n":"탁한 파랑","h":"탁한 파랑","f":"파랑","p":[0,0.25,0.75],"t":0.25,"x":"#4c829d","e":"Harbour Blue","k":"항구 파랑"},{"n":"파랑","h":"파랑","f":"파랑","p":[0,0.167,0.833],"t":0.25,"x":"#4a7baa","e":"Steel Blue","k":"강철 파랑"},{"n":"탁한 파랑","h":"탁한 파랑","f":"파랑","p":[0.167,0.25,0.583],"t":0.25,"x":"#5b7789","e":"Whale Shark","k":"고래상어"},{"n":"탁한 파랑","h":"탁한 파랑","f":"파랑","p":[0.167,0.167,0.667],"t":0.25,"x":"#59729b","e":"Clean Slate","k":"깨끗한 석판"},{"n":"바다","h":"진한 파랑","f":"파랑","p":[0,0.25,0.75],"t":0.32,"x":"#27698c","e":"Sea Goddess","k":"바다 여신"},{"n":"진한 파랑","h":"진한 파랑","f":"파랑","p":[0,0.167,0.833],"t":0.32,"x":"#25619c","e":"Hyper Blue","k":"강렬한 파랑"},{"n":"진한 파랑","h":"진한 파랑","f":"파랑","p":[0.167,0.25,0.583],"t":0.32,"x":"#395d74","e":"Stellar","k":"별빛"},{"n":"진한 파랑","h":"진한 파랑","f":"파랑","p":[0.25,0.25,0.5],"t":0.32,"x":"#455163","e":"Storm Rising","k":"다가오는 폭풍"},{"n":"흐린 남색","h":"흐린 남색","f":"남색","p":[0.25,0.167,0.583],"t":0.14,"x":"#9a9db1","e":"Lavender Ash","k":"라벤더 재"},{"n":"흐린 남색","h":"흐린 남색","f":"남색","p":[0.25,0,0.75],"t":0.14,"x":"#979ac4","e":"Easter Egg","k":"부활절 달걀"},{"n":"남색","h":"남색","f":"남색","p":[0,0,1],"t":0.19,"x":"#6a8ac5","e":"Orbital","k":"궤도"},{"n":"탁한 남색","h":"탁한 남색","f":"남색","p":[0.25,0.083,0.667],"t":0.19,"x":"#7e83af","e":"Aster","k":"과꽃"},{"n":"남색","h":"남색","f":"남색","p":[0.25,0,0.75],"t":0.19,"x":"#7c81b9","e":"Magic Carpet","k":"마법 양탄자"},{"n":"남색","h":"남색","f":"남색","p":[0,0.083,0.917],"t":0.25,"x":"#4975b4","e":"Campanula","k":"초롱꽃"},{"n":"남색","h":"남색","f":"남색","p":[0,0,1],"t":0.25,"x":"#4771bc","e":"Matt Blue","k":"무광 파랑"},{"n":"남색","h":"남색","f":"남색","p":[0.25,0.083,0.667],"t":0.25,"x":"#6068a0","e":"Twinkle Night","k":"반짝이는 밤"},{"n":"남색","h":"남색","f":"남색","p":[0.25,0,0.75],"t":0.25,"x":"#5e65ad","e":"Bellflower","k":"도라지꽃"},{"n":"진한 남색","h":"진한 남색","f":"남색","p":[0,0.083,0.917],"t":0.32,"x":"#235aa8","e":"Le Grand Bleu","k":"그랑 블루"},{"n":"파랑","h":"진한 남색","f":"남색","p":[0,0,1],"t":0.32,"x":"#2154b3","e":"God of Rain","k":"비의 신"},{"n":"진한 남색","h":"진한 남색","f":"남색","p":[0.167,0.167,0.667],"t":0.32,"x":"#375689","e":"Glimpse of Void","k":"공허의 틈"},{"n":"진한 남색","h":"진한 남색","f":"남색","p":[0.25,0.167,0.583],"t":0.32,"x":"#424d7c","e":"Dusk","k":"해질녘"},{"n":"남색","h":"진한 남색","f":"남색","p":[0.25,0.083,0.667],"t":0.32,"x":"#3f4990","e":"Cascade Twilight","k":"폭포 황혼"},{"n":"연한 연보라","h":"연한 연보라","f":"보라","p":[0.333,0,0.667],"t":0.07,"x":"#c4bdd1","e":"Blue Haze","k":"푸른 아지랑이"},{"n":"흐린 연보라","h":"흐린 연보라","f":"보라","p":[0.333,0,0.667],"t":0.1,"x":"#b3acc9","e":"Pastel Lilac","k":"파스텔 라일락"},{"n":"흐린 보라","h":"흐린 보라","f":"보라","p":[0.333,0.083,0.583],"t":0.14,"x":"#a097b5","e":"Hatoba Pigeon","k":"부두의 비둘기"},{"n":"라일락","h":"흐린 보라","f":"보라","p":[0.417,0,0.583],"t":0.14,"x":"#a791b9","e":"Enchanted Lilac","k":"마법 라일락"},{"n":"흐린 보라","h":"흐린 보라","f":"보라","p":[0.417,0.083,0.5],"t":0.14,"x":"#a990ad","e":"Pastel Purple","k":"파스텔 보라"},{"n":"탁한 보라","h":"탁한 보라","f":"보라","p":[0.333,0.167,0.5],"t":0.19,"x":"#8a7d97","e":"Vintage","k":"빈티지"},{"n":"보라","h":"보라","f":"보라","p":[0.417,0,0.583],"t":0.19,"x":"#9076ab","e":"Petrified Purple","k":"화석 보라"},{"n":"탁한 보라","h":"탁한 보라","f":"보라","p":[0.417,0.083,0.5],"t":0.19,"x":"#94759c","e":"Sunshone Plum","k":"햇살 자두"},{"n":"보라","h":"보라","f":"보라","p":[0.333,0.083,0.583],"t":0.25,"x":"#6c6096","e":"Scampi","k":"스캄피"},{"n":"탁한 보라","h":"탁한 보라","f":"보라","p":[0.333,0.167,0.5],"t":0.25,"x":"#6f6183","e":"Plummy","k":"자두빛"},{"n":"보라","h":"보라","f":"보라","p":[0.417,0,0.583],"t":0.25,"x":"#77579c","e":"Passion Flower","k":"시계꽃"},{"n":"보라","h":"보라","f":"보라","p":[0.417,0.083,0.5],"t":0.25,"x":"#7b5689","e":"Muted Purple","k":"차분한 보라"},{"n":"보라","h":"보라","f":"보라","p":[0.5,0,0.5],"t":0.25,"x":"#8a4d8e","e":"Prunella","k":"꿀풀"},{"n":"코발트","h":"진한 보라","f":"보라","p":[0.25,0,0.75],"t":0.32,"x":"#3c46a0","e":"Blueberry","k":"블루베리"},{"n":"인디고","h":"진한 보라","f":"보라","p":[0.333,0.083,0.583],"t":0.32,"x":"#4e4084","e":"Dark Slate Blue","k":"짙은 청석"},{"n":"진한 보라","h":"진한 보라","f":"보라","p":[0.5,0,0.5],"t":0.32,"x":"#73297a","e":"Perkin Mauve","k":"퍼킨 모브"},{"n":"가지","h":"진한 보라","f":"보라","p":[0.333,0.167,0.5],"t":0.32,"x":"#51416c","e":"Meteorite","k":"운석"},{"n":"보라","h":"진한 보라","f":"보라","p":[0.417,0,0.583],"t":0.32,"x":"#5b358a","e":"Purple Patch","k":"보라 조각"},{"n":"포도","h":"어두운 보라","f":"보라","p":[0.417,0.083,0.5],"t":0.32,"x":"#603374","e":"Eminence","k":"고귀함"},{"n":"흐린 자주","h":"흐린 자주","f":"자주","p":[0.583,0,0.417],"t":0.14,"x":"#c28aa3","e":"Exotic Lilac","k":"이국 라일락"},{"n":"흐린 자주","h":"흐린 자주","f":"자주","p":[0.5,0,0.5],"t":0.14,"x":"#b38bb0","e":"Metal Petal","k":"쇠 꽃잎"},{"n":"흐린 자주","h":"흐린 자주","f":"자주","p":[0.417,0.167,0.417],"t":0.14,"x":"#ab8d9d","e":"Classy Mauve","k":"우아한 모브"},{"n":"자주","h":"자주","f":"자주","p":[0.583,0,0.417],"t":0.19,"x":"#b46d90","e":"Pinky Pickle","k":"분홍 피클"},{"n":"탁한 자주","h":"탁한 자주","f":"자주","p":[0.5,0.083,0.417],"t":0.19,"x":"#a8708e","e":"Never Forget","k":"잊지 마"},{"n":"자주","h":"자주","f":"자주","p":[0.5,0,0.5],"t":0.19,"x":"#a06ea0","e":"Berries Galore","k":"베리 가득"},{"n":"탁한 자주","h":"탁한 자주","f":"자주","p":[0.417,0.167,0.417],"t":0.19,"x":"#967088","e":"Fruit of Passion","k":"열정의 열매"},{"n":"자주","h":"자주","f":"자주","p":[0.583,0,0.417],"t":0.25,"x":"#a34c79","e":"Plum Passion","k":"자두 열정"},{"n":"자주","h":"자주","f":"자주","p":[0.5,0.083,0.417],"t":0.25,"x":"#955078","e":"Grape Kiss","k":"포도 입맞춤"},{"n":"진한 자주","h":"진한 자주","f":"자주","p":[0.333,0.25,0.417],"t":0.25,"x":"#705e68","e":"Excalibur","k":"엑스칼리버"},{"n":"진한 자주","h":"진한 자주","f":"자주","p":[0.417,0.167,0.417],"t":0.25,"x":"#7e5070","e":"Plum Highness","k":"자두 전하"},{"n":"자주","h":"진한 자주","f":"자주","p":[0.583,0,0.417],"t":0.32,"x":"#912861","e":"Royal Flush","k":"로열 플러시"},{"n":"진한 자주","h":"진한 자주","f":"자주","p":[0.5,0.083,0.417],"t":0.32,"x":"#802c5f","e":"Pretty in Prune","k":"말린 자두"},{"n":"어두운 자주","h":"어두운 자주","f":"자주","p":[0.333,0.25,0.417],"t":0.32,"x":"#523e4c","e":"Black Magic","k":"흑마법"},{"n":"자두","h":"어두운 자주","f":"자주","p":[0.417,0.167,0.417],"t":0.32,"x":"#632d56","e":"Grape","k":"포도"},{"n":"라벤더","h":"연한 분홍","f":"분홍","p":[0.5,0,0.5],"t":0.07,"x":"#d0b7c9","e":"Thistle","k":"엉겅퀴"},{"n":"연한 분홍","h":"연한 분홍","f":"분홍","p":[0.917,0.083,0],"t":0.1,"x":"#eda59b","e":"She Loves Pink","k":"분홍 사랑"},{"n":"흐린 분홍","h":"흐린 분홍","f":"분홍","p":[0.833,0,0.167],"t":0.1,"x":"#e4a2a2","e":"Pastel Pink","k":"파스텔 분홍"},{"n":"흐린 분홍","h":"흐린 분홍","f":"분홍","p":[0.5,0,0.5],"t":0.1,"x":"#c3a3be","e":"Novel Lilac","k":"새 라일락"},{"n":"맑은 분홍","h":"맑은 분홍","f":"분홍","p":[0.833,0.167,0],"t":0.14,"x":"#eb9382","e":"Lox","k":"훈제 연어"},{"n":"맑은 분홍","h":"맑은 분홍","f":"분홍","p":[0.667,0.167,0.167],"t":0.14,"x":"#dc938a","e":"Powder Blush","k":"볼연지"},{"n":"맑은 분홍","h":"맑은 분홍","f":"분홍","p":[1,0,0],"t":0.14,"x":"#e98982","e":"Light Coral","k":"연산호"},{"n":"맑은 분홍","h":"맑은 분홍","f":"분홍","p":[0.833,0,0.167],"t":0.14,"x":"#de8a8c","e":"York Pink","k":"요크 분홍"},{"n":"흐린 분홍","h":"흐린 분홍","f":"분홍","p":[0.667,0.083,0.25],"t":0.14,"x":"#d48e91","e":"Juicy Peach","k":"물복숭아"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.5,0.5,0],"t":0.025,"x":"#f6e4cf","e":"Antique White","k":"앤티크 흰색"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.583,0.417,0],"t":0.045,"x":"#f5d6bf","e":"Coral Kiss","k":"산호 입맞춤"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.583,0.25,0.167],"t":0.045,"x":"#eccec3","e":"Humble Blush","k":"수줍은 홍조"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.583,0,0.417],"t":0.045,"x":"#e2c9cd","e":"Perfume Cloud","k":"향수 구름"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.667,0.333,0],"t":0.07,"x":"#f2c4ad","e":"Taco","k":"타코"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.417,0.417,0.167],"t":0.07,"x":"#e2c8ad","e":"Macadamia","k":"마카다미아"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.583,0.25,0.167],"t":0.07,"x":"#e7bfb2","e":"Mellow Marrow","k":"부드러운 호박"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.417,0.333,0.25],"t":0.07,"x":"#d9c1b1","e":"Cafe Latte","k":"카페라테"},{"n":"분홍","h":"연갈색","f":"갈색","p":[1,0,0],"t":0.07,"x":"#efb6ae","e":"Salmon Glow","k":"연어빛"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.667,0,0.333],"t":0.07,"x":"#dfb7bc","e":"Shy Young Salmon","k":"수줍은 연어"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.417,0.417,0.167],"t":0.1,"x":"#dbb999","e":"Tan","k":"황갈색"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.5,0.333,0.167],"t":0.1,"x":"#dfb39d","e":"Sun-Kissed Beach","k":"햇살 해변"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.417,0.333,0.25],"t":0.1,"x":"#cfb09e","e":"Soba","k":"메밀국수"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.583,0.167,0.25],"t":0.1,"x":"#daa9a5","e":"La Vie en Rose","k":"장밋빛 인생"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.667,0,0.333],"t":0.1,"x":"#d7a3ac","e":"Young at Heart","k":"마음은 청춘"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.417,0.25,0.333],"t":0.1,"x":"#c5a9a5","e":"Sable Cloaked","k":"담비 망토"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.5,0.083,0.417],"t":0.1,"x":"#c8a5b3","e":"Lily","k":"백합"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.5,0.25,0.25],"t":0.14,"x":"#cc978d","e":"Savoury Salmon","k":"구운 연어"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.417,0.333,0.25],"t":0.14,"x":"#c39b86","e":"Cashmere Clay","k":"캐시미어 점토"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.5,0.167,0.333],"t":0.14,"x":"#c29096","e":"Rosy Brown","k":"장밋빛 갈색"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.417,0.25,0.333],"t":0.14,"x":"#b59290","e":"Creamed Caramel","k":"크림 캐러멜"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.333,0.333,0.333],"t":0.14,"x":"#9f9081","e":"Earl Grey","k":"얼그레이"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.417,0.25,0.333],"t":0.19,"x":"#a37877","e":"Dusty Duchess","k":"빛바랜 공작부인"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.333,0.333,0.333],"t":0.19,"x":"#877464","e":"Mink","k":"밍크"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.5,0.25,0.25],"t":0.25,"x":"#b26055","e":"Dried Tomatoes","k":"말린 토마토"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.583,0.167,0.25],"t":0.25,"x":"#bb595a","e":"Stormy Passion","k":"폭풍 같은 열정"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.417,0.333,0.25],"t":0.25,"x":"#a4684b","e":"Hot Cacao","k":"뜨거운 코코아"},{"n":"장미","h":"연갈색","f":"갈색","p":[0.75,0,0.25],"t":0.25,"x":"#c44c5e","e":"Saffron Desires","k":"사프란 꿈"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.667,0,0.333],"t":0.25,"x":"#b54c6a","e":"Mauve It","k":"모브"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.5,0.167,0.333],"t":0.25,"x":"#a25665","e":"Cherry Berry","k":"체리 베리"},{"n":"연갈색","h":"연갈색","f":"갈색","p":[0.333,0.417,0.25],"t":0.32,"x":"#8c6421","e":"Olivia","k":"올리비아"},{"n":"갈색","h":"갈색","f":"갈색","p":[0.417,0.25,0.333],"t":0.25,"x":"#8f595b","e":"Red Elegance","k":"붉은 기품"},{"n":"갈색","h":"갈색","f":"갈색","p":[0.583,0.167,0.25],"t":0.32,"x":"#ae373b","e":"Brown","k":"갈색"},{"n":"벽돌","h":"갈색","f":"갈색","p":[0.5,0.25,0.25],"t":0.32,"x":"#a34035","e":"Ketchup","k":"케첩"},{"n":"갈색","h":"갈색","f":"갈색","p":[0.417,0.333,0.25],"t":0.32,"x":"#924928","e":"Sienna","k":"시에나"},{"n":"갈색","h":"갈색","f":"갈색","p":[0.667,0,0.333],"t":0.32,"x":"#a7284e","e":"Cry of a Rose","k":"장미의 울음"},{"n":"커피","h":"갈색","f":"갈색","p":[0.333,0.333,0.333],"t":0.25,"x":"#6b5543","e":"Baby Bear","k":"아기곰"},{"n":"와인","h":"갈색","f":"갈색","p":[0.5,0.167,0.333],"t":0.32,"x":"#903447","e":"Rose Laffy Taffy","k":"장미 사탕"},{"n":"버건디","h":"갈색","f":"갈색","p":[0.417,0.25,0.333],"t":0.32,"x":"#78383c","e":"Wild Berry","k":"산딸기"},{"n":"초콜릿","h":"고동색","f":"갈색","p":[0.333,0.333,0.333],"t":0.32,"x":"#4d331f","e":"Peat Brown","k":"이탄 갈색"},{"n":"카키","h":"카키","f":"올리브","p":[0,0.583,0.417],"t":0.025,"x":"#e5e9d3","e":"Beige","k":"베이지"},{"n":"카키","h":"카키","f":"올리브","p":[0.417,0.583,0],"t":0.045,"x":"#f6e0bf","e":"Bisque","k":"비스크"},{"n":"크림","h":"카키","f":"올리브","p":[0.167,0.583,0.25],"t":0.045,"x":"#e6e2c2","e":"Silver Fern","k":"은고사리"},{"n":"카키","h":"카키","f":"올리브","p":[0.083,0.583,0.333],"t":0.07,"x":"#d7dbb2","e":"April Showers","k":"4월 소나기"},{"n":"베이지","h":"카키","f":"올리브","p":[0.333,0.417,0.25],"t":0.045,"x":"#e1d5c0","e":"Garlic Clove","k":"마늘 한 쪽"},{"n":"카키","h":"카키","f":"올리브","p":[0.333,0.417,0.25],"t":0.1,"x":"#cdbb9b","e":"Treasure Map","k":"보물 지도"},{"n":"카키","h":"카키","f":"올리브","p":[0.25,0.417,0.333],"t":0.1,"x":"#bebc9e","e":"Lush","k":"무성함"},{"n":"카키","h":"카키","f":"올리브","p":[0.25,0.417,0.333],"t":0.14,"x":"#acab86","e":"Olive Tree","k":"올리브 나무"},{"n":"카키","h":"카키","f":"올리브","p":[0.25,0.417,0.333],"t":0.19,"x":"#98986b","e":"Guacamole","k":"과카몰리"},{"n":"카키","h":"카키","f":"올리브","p":[0.25,0.417,0.333],"t":0.25,"x":"#80814b","e":"Verdant Leaf","k":"푸른 잎"},{"n":"올리브","h":"올리브","f":"올리브","p":[0.25,0.417,0.333],"t":0.32,"x":"#666829","e":"Dark Olive Green","k":"짙은 올리브"},{"n":"흰빛 회색","h":"흰빛 회색","f":"회색","p":[0.083,0.333,0.583],"t":0.025,"x":"#dde2d9","e":"Fish Ceviche","k":"세비체"},{"n":"흰빛 회색","h":"흰빛 회색","f":"회색","p":[0.5,0.25,0.25],"t":0.025,"x":"#ecdcd2","e":"Delicate Bliss","k":"은은한 행복"},{"n":"흰빛 회색","h":"흰빛 회색","f":"회색","p":[0.5,0,0.5],"t":0.025,"x":"#e6d9db","e":"Gainsboro","k":"게인즈버러"},{"n":"물빛","h":"흰빛 회색","f":"회색","p":[0,0.167,0.833],"t":0.045,"x":"#cbd5da","e":"Light Gray","k":"연회색"},{"n":"흰빛 회색","h":"흰빛 회색","f":"회색","p":[0.417,0,0.583],"t":0.045,"x":"#d7cbd6","e":"Light Lilac","k":"연라일락"},{"n":"흰빛 회색","h":"흰빛 회색","f":"회색","p":[0.333,0.333,0.333],"t":0.045,"x":"#d4cbc0","e":"Greybeard","k":"흰 수염"},{"n":"흰빛 회색","h":"흰빛 회색","f":"회색","p":[0.083,0.333,0.583],"t":0.07,"x":"#bdccc4","e":"Murmur","k":"속삭임"},{"n":"연회색","h":"연회색","f":"회색","p":[0,0.167,0.833],"t":0.07,"x":"#b9c8d3","e":"Icebreaker","k":"쇄빙선"},{"n":"연회색","h":"연회색","f":"회색","p":[0.25,0.25,0.5],"t":0.07,"x":"#c2c3c2","e":"Silver","k":"은색"},{"n":"연회색","h":"연회색","f":"회색","p":[0.417,0.167,0.417],"t":0.07,"x":"#cbb8be","e":"Nebulous","k":"성운"},{"n":"연회색","h":"연회색","f":"회색","p":[0.333,0.333,0.333],"t":0.07,"x":"#c4baae","e":"Moonbeam","k":"달빛"},{"n":"연회색","h":"연회색","f":"회색","p":[0.083,0.25,0.667],"t":0.1,"x":"#a8bbc1","e":"Seafoam Slate","k":"물거품 석판"},{"n":"연회색","h":"연회색","f":"회색","p":[0.25,0.167,0.583],"t":0.1,"x":"#b0b2bf","e":"Cosmic","k":"우주"},{"n":"연회색","h":"연회색","f":"회색","p":[0.333,0.25,0.417],"t":0.1,"x":"#b6acac","e":"Dark Gray","k":"진회색"},{"n":"연회색","h":"연회색","f":"회색","p":[0.333,0.333,0.333],"t":0.1,"x":"#b4a79a","e":"Desert Dune","k":"사막 언덕"},{"n":"연회색","h":"연회색","f":"회색","p":[0.167,0.25,0.583],"t":0.14,"x":"#95a5ad","e":"Lost at Sea","k":"표류"},{"n":"연회색","h":"연회색","f":"회색","p":[0.333,0.25,0.417],"t":0.14,"x":"#a29698","e":"Walkway","k":"산책로"},{"n":"회색","h":"회색","f":"회색","p":[0.25,0.25,0.5],"t":0.19,"x":"#828891","e":"Smoky Studio","k":"연기 낀 작업실"},{"n":"회색","h":"회색","f":"회색","p":[0.333,0.25,0.417],"t":0.19,"x":"#8a7c82","e":"Mighty Mauve","k":"힘센 모브"},{"n":"회색","h":"회색","f":"회색","p":[0.25,0.25,0.5],"t":0.25,"x":"#656e7b","e":"Ashen Whisper","k":"잿빛 속삭임"}];
+const SWATCHES = DEX.map((d, i) => { const rgb = [1, 3, 5].map(j => parseInt(d.x.slice(j, j + 2), 16)); return { no: i + 1, key: d.x, name: d.k, en: d.e, old: d.n, ko: d.h, hint: d.h, fam: d.f, hex: d.x.toUpperCase(), rgb, lab: lab(rgb), pig: d.p, amt: d.t, conc: Math.min(1.6, d.t / 0.3) }; });
+const swByKey = {}; SWATCHES.forEach(s => swByKey[s.key] = s);
+
+// ---------------- save ----------------
+const SKEY = 'mulgam-v1';
+let save = { unlocked: 1, best: {}, dex: {} };
+try { const t = JSON.parse(localStorage.getItem(SKEY) || 'null'); if (t) save = Object.assign(save, t); } catch (e) {}
+const persistMigrate = () => { for (const k of Object.keys(save.dex)) if (k[0] !== '#') { const s = SWATCHES.find(x => x.old === k); if (s && !save.dex[s.key]) save.dex[s.key] = save.dex[k]; delete save.dex[k]; } };
+const persist = () => { try { localStorage.setItem(SKEY, JSON.stringify(save)); } catch (e) {} };
+
+// ---------------- geometry per level: mask, smooth shape, light & shadow ----------------
+const RS = 12; // shading raster: pixels per grid unit
+function prepLevel(lv) {
+  if (lv.prep) return lv.prep;
+  const W = GW * RS, H = GH * RS;
+  const shape = document.createElement('canvas'); shape.width = W; shape.height = H;
+  const sc = shape.getContext('2d'); sc.scale(RS, RS); sc.fillStyle = '#000';
+  const paths = lv.parts.map(p => new Path2D(p.d));
+  const mk = document.createElement('canvas'); mk.width = W; mk.height = H; const mx = mk.getContext('2d'); mx.scale(RS, RS);
+  lv.parts.forEach((p, i) => { sc.fill(paths[i]); if (p.paint !== false) mx.fill(paths[i]); });
+  // grid mask: cell coverage from the smooth shape
+  const sd = mx.getImageData(0, 0, W, H).data, mask = new Uint8Array(N);
+  for (let c = 0; c < N; c++) { const x0 = (c % GW) * RS, y0 = ((c / GW) | 0) * RS; let s = 0; for (let j = 1; j < RS; j += 3) for (let i = 1; i < RS; i += 3) s += sd[((y0 + j) * W + x0 + i) * 4 + 3]; mask[c] = s / (16 * 255) > 0.3 ? 1 : 0; }
+  // height field: per part, distance from its edge, shaped by the profile
+  const hw = W / 2 | 0, hh = H / 2 | 0, height = new Float32Array(hw * hh), inside = new Uint8Array(hw * hh);
+  lv.parts.forEach((p, pi) => {
+    const pc = document.createElement('canvas'); pc.width = hw; pc.height = hh; const px = pc.getContext('2d'); px.scale(RS / 2, RS / 2); px.fill(paths[pi]);
+    const a = px.getImageData(0, 0, hw, hh).data, D = new Float32Array(hw * hh);
+    for (let i = 0; i < hw * hh; i++) { D[i] = a[i * 4 + 3] > 127 ? 1e6 : 0; if (D[i]) inside[i] = 1; }
+    for (let y = 0; y < hh; y++) for (let x = 0; x < hw; x++) { const i = y * hw + x; if (!D[i]) continue; let v = D[i]; if (x) v = Math.min(v, D[i - 1] + 1); if (y) v = Math.min(v, D[i - hw] + 1); if (x && y) v = Math.min(v, D[i - hw - 1] + 1.414); if (y && x < hw - 1) v = Math.min(v, D[i - hw + 1] + 1.414); D[i] = v; }
+    for (let y = hh - 1; y >= 0; y--) for (let x = hw - 1; x >= 0; x--) { const i = y * hw + x; if (!D[i]) continue; let v = D[i]; if (x < hw - 1) v = Math.min(v, D[i + 1] + 1); if (y < hh - 1) v = Math.min(v, D[i + hw] + 1); if (x < hw - 1 && y < hh - 1) v = Math.min(v, D[i + hw + 1] + 1.414); if (y < hh - 1 && x) v = Math.min(v, D[i + hw - 1] + 1.414); D[i] = v; }
+    const u = RS / 2, k = p.h || 1;
+    for (let i = 0; i < hw * hh; i++) { if (!D[i]) continue; const d = D[i] / u; let h;
+      if (lv.profile === 'plate' && pi === 0) h = d < 3 ? Math.sin(Math.min(1, d / 2.2) * Math.PI) * 1.6 + (d > 2.2 ? -0.25 : 0) : -0.25;
+      else h = Math.sqrt(Math.min(d, 9)) * 2.2 * k;
+      height[i] = Math.max(height[i], h + (pi ? 0.6 : 0)); }
+  });
+  // soften the height field so the surface reads as one smooth form, not facets
+  { const tmp = new Float32Array(hw * hh), R = 5;
+    for (let pass = 0; pass < 3; pass++) {
+      for (let y = 0; y < hh; y++) { let acc = 0; for (let x = -R; x <= R; x++) acc += height[y * hw + Math.min(hw - 1, Math.max(0, x))];
+        for (let x = 0; x < hw; x++) { tmp[y * hw + x] = acc / (2 * R + 1); acc += height[y * hw + Math.min(hw - 1, x + R + 1)] - height[y * hw + Math.max(0, x - R)]; } }
+      for (let x = 0; x < hw; x++) { let acc = 0; for (let y = -R; y <= R; y++) acc += tmp[Math.min(hh - 1, Math.max(0, y)) * hw + x];
+        for (let y = 0; y < hh; y++) { height[y * hw + x] = acc / (2 * R + 1); acc += tmp[Math.min(hh - 1, y + R + 1) * hw + x] - tmp[Math.max(0, y - R) * hw + x]; } }
+    } }
+  // light: from the upper left
+  const shade = document.createElement('canvas'); shade.width = hw; shade.height = hh;
+  const gloss = document.createElement('canvas'); gloss.width = hw; gloss.height = hh;
+  const s1 = shade.getContext('2d'), s2 = gloss.getContext('2d'), A = s1.createImageData(hw, hh), B = s2.createImageData(hw, hh);
+  const l = [-0.45, -0.62, 0.64], hv = [(-0.45) / 2, (-0.62) / 2, (0.64 + 1) / 2], hl = Math.hypot(...hv);
+  for (let y = 1; y < hh - 1; y++) for (let x = 1; x < hw - 1; x++) {
+    const i = y * hw + x; if (!inside[i]) continue;
+    const gx = (height[i + 1] - height[i - 1]) * RS / 4, gy = (height[i + hw] - height[i - hw]) * RS / 4;
+    const nl = Math.hypot(gx, gy, 1), n = [-gx / nl, -gy / nl, 1 / nl];
+    const dif = Math.max(0, n[0] * l[0] + n[1] * l[1] + n[2] * l[2]), sp = Math.pow(Math.max(0, (n[0] * hv[0] + n[1] * hv[1] + n[2] * hv[2]) / hl), 24);
+    const v = Math.min(255, Math.round(255 * (0.66 + 0.42 * dif)));
+    A.data[i * 4] = A.data[i * 4 + 1] = A.data[i * 4 + 2] = v; A.data[i * 4 + 3] = 255;
+    B.data[i * 4] = B.data[i * 4 + 1] = B.data[i * 4 + 2] = 255; B.data[i * 4 + 3] = Math.round(255 * Math.min(0.6, sp * 0.65));
+  }
+  // grow the shading a few pixels past the edge so the smooth outline never shows an unshaded rim
+  for (let pass = 0; pass < 3; pass++) { const src = A.data.slice(); for (let y = 1; y < hh - 1; y++) for (let x = 1; x < hw - 1; x++) { const i = y * hw + x; if (src[i * 4 + 3]) continue;
+    for (const n of [i - 1, i + 1, i - hw, i + hw]) if (src[n * 4 + 3]) { A.data[i * 4] = A.data[i * 4 + 1] = A.data[i * 4 + 2] = src[n * 4]; A.data[i * 4 + 3] = 255; break; } } }
+  s1.putImageData(A, 0, 0); s2.putImageData(B, 0, 0);
+  // little details that sell the shape
+  if (lv.seeds) { s1.save(); s2.save(); s1.scale(RS / 2, RS / 2); s2.scale(RS / 2, RS / 2); const clip = paths[0];
+    for (let j = 0; j < 9; j++) for (let i = 0; i < 8; i++) { const x = 8.5 + i * 3.1 + (j % 2) * 1.55, y = 21 + j * 3.2; if (!sc.isPointInPath(clip, x * RS, y * RS) || !sc.isPointInPath(clip, (x + 1.3) * RS, (y + 1.3) * RS) || !sc.isPointInPath(clip, (x - 1.3) * RS, (y - 1.3) * RS)) continue;
+      s1.fillStyle = 'rgba(90,80,60,.35)'; s1.beginPath(); s1.ellipse(x, y, 0.3, 0.45, -0.3, 0, 7); s1.fill(); s2.fillStyle = 'rgba(255,255,255,.7)'; s2.beginPath(); s2.ellipse(x - 0.18, y - 0.25, 0.16, 0.2, 0, 0, 7); s2.fill(); }
+    s1.restore(); s2.restore(); }
+  if (lv.ribs) { s1.save(); s1.scale(RS / 2, RS / 2); s1.strokeStyle = 'rgba(80,70,60,.35)'; s1.lineWidth = 0.35; for (const x of [11.5, 19.5, 27.5]) { s1.beginPath(); s1.moveTo(19.5, 8.8); s1.quadraticCurveTo(x * 0.9 + 1.9, 15, x, 26.6); s1.stroke(); } s1.restore(); }
+  return (lv.prep = { mask, paths, shape, shade, gloss });
+}
+
+// ---------------- drawing ----------------
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const small = document.createElement('canvas'); small.width = GW * 4; small.height = GH * 4; const smx = small.getContext('2d'), mimg = smx.createImageData(GW * 4, GH * 4);
+const obj = document.createElement('canvas'), ox = obj.getContext('2d');
+// cold-press paper: fine grain plus a few soft fibres, tiled
+const paperTex = (() => { const S = 256, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'), im = g.createImageData(S, S);
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const v = new Float32Array(S * S); for (let i = 0; i < S * S; i++) v[i] = rnd();
+  for (let pass = 0; pass < 2; pass++) for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const i = y * S + x; v[i] = (v[i] * 2 + v[y * S + (x + 1) % S] + v[((y + 1) % S) * S + x]) / 4; }
+  for (let i = 0; i < S * S; i++) { const n = 236 + (v[i] - 0.5) * 70 + rnd() * 8; im.data[i * 4] = n; im.data[i * 4 + 1] = n - 1; im.data[i * 4 + 2] = n - 4; im.data[i * 4 + 3] = 255; }
+  g.putImageData(im, 0, 0); return c; })();
+function paintToSmall(canvas, mask) {
+  const col = new Array(N);
+  const T = new Float32Array(N); for (let c = 0; c < N; c++) T[c] = canvas.P[0][c] + canvas.P[1][c] + canvas.P[2][c];
+  for (let c = 0; c < N; c++) { if (!mask[c]) { col[c] = null; continue; } const v = canvas.color(c), t = T[c];
+    if (t > 0.03) { const x = c % GW; let mn = t; for (const n of [x > 0 ? c - 1 : -1, x < GW - 1 ? c + 1 : -1, c - GW, c + GW]) if (n >= 0 && n < N && mask[n]) mn = Math.min(mn, T[n]);
+      const edge = Math.max(0, Math.min(1, (0.75 - mn / t) / 0.75)), k = 1 - 0.2 * edge; col[c] = [v[0] * k, v[1] * k, v[2] * k]; }
+    else col[c] = v; }
+  // spread edge colours outward so smoothing never pulls in grey
+  for (let pass = 0; pass < 3; pass++) { const nx = col.slice(); for (let c = 0; c < N; c++) { if (col[c]) continue; const x = c % GW; for (const n of [c - 1, c + 1, c - GW, c + GW]) { if (n < 0 || n >= N || (n === c - 1 && x === 0) || (n === c + 1 && x === GW - 1)) continue; if (col[n]) { nx[c] = col[n]; break; } } } for (let c = 0; c < N; c++) col[c] = nx[c]; }
+  // 4x upsample (bilinear between cell centres) + soft blur, so paint reads as wet pigment, not squares
+  const F = 4, MW = GW * F, MH = GH * F, buf = new Float32Array(MW * MH * 3), tmp = new Float32Array(MW * MH * 3);
+  const cc = (x, y) => col[Math.min(GH - 1, Math.max(0, y)) * GW + Math.min(GW - 1, Math.max(0, x))] || PAPER;
+  for (let my = 0; my < MH; my++) { const fy = (my + 0.5) / F - 0.5, y0 = Math.floor(fy), ty = fy - y0;
+    for (let mx = 0; mx < MW; mx++) { const fx = (mx + 0.5) / F - 0.5, x0 = Math.floor(fx), tx = fx - x0;
+      const a = cc(x0, y0), b = cc(x0 + 1, y0), c2 = cc(x0, y0 + 1), d = cc(x0 + 1, y0 + 1), o = (my * MW + mx) * 3;
+      for (let k = 0; k < 3; k++) buf[o + k] = (a[k] * (1 - tx) + b[k] * tx) * (1 - ty) + (c2[k] * (1 - tx) + d[k] * tx) * ty; } }
+  const R = 3;
+  for (let pass = 0; pass < 2; pass++) {
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) { const o = (y * MW + x) * 3; for (let k = 0; k < 3; k++) { let acc = 0; for (let i = -R; i <= R; i++) acc += buf[(y * MW + Math.min(MW - 1, Math.max(0, x + i))) * 3 + k]; tmp[o + k] = acc / (2 * R + 1); } }
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) { const o = (y * MW + x) * 3; for (let k = 0; k < 3; k++) { let acc = 0; for (let i = -R; i <= R; i++) acc += tmp[(Math.min(MH - 1, Math.max(0, y + i)) * MW + x) * 3 + k]; buf[o + k] = acc / (2 * R + 1); } }
+  }
+  for (let i = 0; i < MW * MH; i++) { mimg.data[i * 4] = buf[i * 3]; mimg.data[i * 4 + 1] = buf[i * 3 + 1]; mimg.data[i * 4 + 2] = buf[i * 3 + 2]; mimg.data[i * 4 + 3] = 255; }
+  smx.putImageData(mimg, 0, 0);
+}
+function renderObject(target, canvas, lv, w, h, withShadow) {
+  const p = prepLevel(lv), g = target.getContext('2d');
+  g.clearRect(0, 0, w, h);
+  const bg = g.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#f7f2ea'); bg.addColorStop(1, '#e9e1d4'); g.fillStyle = bg; g.fillRect(0, 0, w, h);
+  if (withShadow) { g.save(); g.filter = `blur(${Math.round(w / 40)}px)`; g.globalAlpha = 0.28; g.translate(w * 0.03, h * 0.03); g.drawImage(p.shape, 0, 0, w, h); g.restore(); }
+  obj.width = w; obj.height = h;
+  paintToSmall(canvas, p.mask);
+  ox.imageSmoothingEnabled = true; ox.imageSmoothingQuality = 'high';
+  ox.drawImage(small, 0, 0, w, h);
+  lv.parts.forEach((pt, i) => { if (pt.paint === false) { ox.save(); ox.scale(w / GW, h / GH); ox.fillStyle = `rgb(${PAPER})`; ox.fill(p.paths[i]); ox.restore(); } });
+  ox.globalCompositeOperation = 'multiply'; ox.drawImage(p.shade, 0, 0, w, h);
+  ox.globalCompositeOperation = 'source-over'; ox.drawImage(p.gloss, 0, 0, w, h);
+  ox.globalCompositeOperation = 'destination-in'; ox.drawImage(p.shape, 0, 0, w, h);
+  ox.globalCompositeOperation = 'source-over';
+  g.drawImage(obj, 0, 0);
+  g.save(); g.globalCompositeOperation = 'multiply'; g.globalAlpha = 0.55; g.fillStyle = g.createPattern(paperTex, 'repeat'); const sc = Math.max(1, w / 420); g.scale(sc, sc); g.fillRect(0, 0, w / sc, h / sc); g.restore();
+}
+
+// ---------------- game state ----------------
+let log = [], L = 0, lv, cur, target, hist = [], used = 0, maxDrops, paint = 'r', busy = false, peek = false, aim = null, freeMode = false;
+const paintCss = () => typeof paint === 'string' ? PAINTS.find(p => p.k === paint).css : paint.css;
+const paintSpec = () => typeof paint === 'string' ? paint : [...paint.pig.map(v => Math.round(v * 1000) / 1000), Math.round(paint.conc * 1000) / 1000];
+function makeTarget(lv) { const p = prepLevel(lv), t = new Canvas(p.mask); for (const d of lv.drops) { t.drop(d[0], d[1], d[2], d[3], 0); t.settle(); } return t; }
+function setMode(free) {
+  freeMode = free;
+  document.querySelector('.meter').style.display = free ? 'none' : '';
+  document.getElementById('dropsLeft').style.display = free ? 'none' : '';
+  document.querySelector('.info .side').style.display = free ? 'none' : '';
+  document.getElementById('goalTxt').textContent = free ? '자유롭게 칠해 보세요 · 물감 제한 없음' : '목표와 80% 이상';
+  if (free) { probing = false; probe = null; showProbe(); }
+  buildPalette();
+}
+function startFree(i) {
+  setMode(true); L = i; lv = LEVELS[i]; const p = prepLevel(lv);
+  target = lv.target || (lv.target = makeTarget(lv));
+  cur = new Canvas(p.mask); hist = []; used = 0; maxDrops = Infinity; log = [];
+  document.getElementById('stageName').textContent = '자유 칠하기 · ' + lv.name;
+  renderObject(document.getElementById('thumb'), new Canvas(p.mask), lv, 112, 152, false);
+  document.getElementById('hint').textContent = '마음대로 떨어뜨려 칠해 보세요 · 아래 팔레트를 옆으로 밀면 찾은 색이 더 있어요'; document.getElementById('hint').style.opacity = 1;
+  updateInfo(); draw();
+}
+function startLevel(i) {
+  if (freeMode) setMode(false);
+  document.getElementById('hint').textContent = '팔레트에서 물감을 고르고 그림을 누르세요 · 누르고 있으면 스며들 자리가 보이고, 오래 누를수록 양이 많아져요';
+  L = i; lv = LEVELS[i]; const p = prepLevel(lv);
+  target = lv.target || (lv.target = makeTarget(lv));
+  cur = new Canvas(p.mask); hist = []; used = 0; probe = null; showProbe && setTimeout(showProbe, 0); maxDrops = lv.drops.length + (i < 3 ? 2 : 1); log = [];
+  document.getElementById('stageName').textContent = (i + 1) + '. ' + lv.name;
+  renderObject(document.getElementById('thumb'), target, lv, 112, 152, false);
+  updateInfo(); draw();
+}
+function sizeCanvas() { const r = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.width * 54 / 40 * dpr); draw(); }
+function draw() {
+  if (!lv || !cv.width) return;
+  const w = cv.width, h = cv.height;
+  renderObject(cv, peek ? target : cur, lv, w, h, true);
+  if (probe) { const u = w / GW; ctx.save(); ctx.strokeStyle = '#fff'; ctx.lineWidth = u * 0.5; ctx.beginPath(); ctx.arc(probe.x * u, probe.y * u, u * 1.6, 0, 7); ctx.stroke(); ctx.strokeStyle = 'rgba(40,30,20,.85)'; ctx.lineWidth = u * 0.22; ctx.stroke(); ctx.restore(); }
+  if (aim) { // aiming preview: where this drop will actually spread, plus the drop itself
+    const u = w / GW, x = aim.x * u, y = aim.y * u, vol = aim.vol, hh = aim.h;
+    ctx.save();
+    if (preview.img) { ctx.globalAlpha = 0.85; ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; ctx.drawImage(preview.img, 0, 0, w, h); ctx.globalAlpha = 1; }
+    ctx.font = `600 ${Math.round(u * 1.3)}px sans-serif`; ctx.textAlign = 'center'; ctx.lineWidth = Math.max(2, u * 0.25); ctx.strokeStyle = 'rgba(251,248,243,.9)'; ctx.fillStyle = 'rgba(60,50,40,.75)';
+    const ty = Math.max(u * 2, y - u * 6), label = `양 ${Math.round(vol * 100)}%`;
+    ctx.strokeText(label, x, ty); ctx.fillText(label, x, ty);
+    ctx.restore();
+  }
+}
+function updateInfo() {
+  if (probe) setTimeout(showProbe, 0);
+  if (freeMode) { document.getElementById('btnUndo').disabled = !hist.length || busy; document.getElementById('btnDone').disabled = busy || !used; return 0; }
+  const s = similarity(cur, target);
+  document.getElementById('sim').textContent = Math.round(s * 100) + '%';
+  document.getElementById('dropsLeft').innerHTML = Array.from({ length: maxDrops }, (_, i) => `<i class="${i < used ? 'used' : ''}"></i>`).join('');
+  document.getElementById('btnUndo').disabled = !hist.length || busy;
+  document.getElementById('btnDone').disabled = busy || !used;
+  return s;
+}
+
+// ---------------- input: press = amount, slide up = height ----------------
+const pal = document.getElementById('palette');
+let palItems = [];
+function buildPalette() {
+  palItems = PAINTS.map(p => p.k);
+  if (freeMode) { const extra = SWATCHES.filter(s => save.dex[s.key]).sort((a, b) => save.dex[b.key] - save.dex[a.key]).slice(0, 16).map(s => ({ name: s.name, css: s.hex, pig: s.pig, conc: s.conc }));
+    if (typeof paint !== 'string' && !extra.some(x => x.css === paint.css)) extra.unshift(paint); palItems.push(...extra); }
+  else if (typeof paint !== 'string') paint = 'r';
+  pal.className = freeMode ? 'fpal' : 'palette';
+  const isSel = p => typeof p === 'string' ? p === paint : (typeof paint !== 'string' && p.css === paint.css);
+  pal.innerHTML = palItems.map((p, i) => { const css = typeof p === 'string' ? PAINTS.find(x => x.k === p).css : p.css, nm = typeof p === 'string' ? PAINTS.find(x => x.k === p).name : p.name;
+    return `<button class="paint" data-i="${i}" style="--c:${css}" aria-pressed="${isSel(p)}"><div class="well"><div class="cake"></div></div><span>${nm}</span></button>`; }).join('')
+    + (freeMode ? `<button class="paint" id="pMore"><div class="well"><div class="cake" style="--c:#efe9df;display:flex;align-items:center;justify-content:center;font-size:18px;color:#8a8178">⋯</div></div><span>도감에서</span></button>` : '');
+}
+buildPalette();
+pal.addEventListener('click', e => { if (e.target.closest('#pMore')) { openDex(s => { paint = { name: s.name, css: s.hex, pig: s.pig, conc: s.conc }; buildPalette(); }); return; }
+  const b = e.target.closest('.paint'); if (!b) return; paint = palItems[+b.dataset.i]; if (probing) { probing = false; document.getElementById('probeBtn').setAttribute('aria-pressed', false); document.getElementById('hint').style.opacity = 0; } pal.querySelectorAll('.paint').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+let press = null, raf = 0;
+const preview = { key: '', img: null }, pvC = document.createElement('canvas'); pvC.width = GW * 4; pvC.height = GH * 4;
+const pvSmall = document.createElement('canvas'); pvSmall.width = GW; pvSmall.height = GH;
+function updatePreview(a) {
+  const key = [paintCss(), a.x.toFixed(1), a.y.toFixed(1), (Math.round(a.vol * 25) / 25).toFixed(2)].join('|');
+  if (key === preview.key) return; preview.key = key;
+  const c = cur.clone(), c0 = cur.clone(); c.drop(paintSpec(), a.x, a.y, Math.round(a.vol * 25) / 25, 0); const n = c.settle(); for (let i = 0; i < n; i++) c0.step(); // c0 = same time passing without this drop, so only the new paint shows
+  const g = pvSmall.getContext('2d'), im = g.createImageData(GW, GH), col = paintCss();
+  const rgb = [parseInt(col.slice(1, 3), 16), parseInt(col.slice(3, 5), 16), parseInt(col.slice(5, 7), 16)];
+  for (let i = 0; i < N; i++) { const add = Math.max(c.L[i] - c0.L[i], 0) * 0.6 + (c.P[0][i] + c.P[1][i] + c.P[2][i] - c0.P[0][i] - c0.P[1][i] - c0.P[2][i]); if (add <= 0.01) continue; const al = Math.sqrt(Math.min(1, add / 0.08));
+    im.data[i * 4] = rgb[0]; im.data[i * 4 + 1] = rgb[1]; im.data[i * 4 + 2] = rgb[2]; im.data[i * 4 + 3] = Math.round(170 * al); }
+  g.putImageData(im, 0, 0);
+  const p2 = pvC.getContext('2d'); p2.clearRect(0, 0, pvC.width, pvC.height); p2.imageSmoothingEnabled = true; p2.imageSmoothingQuality = 'high'; p2.drawImage(pvSmall, 0, 0, pvC.width, pvC.height);
+  p2.globalCompositeOperation = 'destination-in'; p2.drawImage(prepLevel(lv).shape, 0, 0, pvC.width, pvC.height); p2.globalCompositeOperation = 'source-over';
+  preview.img = pvC;
+}
+function gridPos(e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * GW, y: (e.clientY - r.top) / r.height * GH }; }
+// ---- colour check: tap a spot to see what the goal and my painting are made of there ----
+let probing = false, probe = null;
+function mixAt(cnv, x, y) {
+  const cx = Math.floor(x), cy = Math.floor(y); let p = [0, 0, 0], n = 0;
+  for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) { const xx = cx + i, yy = cy + j; if (xx < 0 || yy < 0 || xx >= GW || yy >= GH) continue; const c = yy * GW + xx; if (!cnv.mask[c]) continue; for (let k = 0; k < 3; k++) p[k] += cnv.P[k][c]; n++; }
+  if (!n) return null; p = p.map(v => v / n); const t = p[0] + p[1] + p[2];
+  return { ratio: t > 0.01 ? p.map(v => Math.round(v / t * 100)) : [0, 0, 0], dens: Math.round(Math.min(1, t / 0.32) * 100), rgb: pigColor(p[0], p[1], p[2]) };
+}
+function showProbe() {
+  const el = document.getElementById('probe');
+  if (!probe) { el.hidden = true; return; }
+  const a = mixAt(target, probe.x, probe.y), b = mixAt(cur, probe.x, probe.y);
+  if (!a) { el.hidden = true; return; }
+  const CC = ['#db2621', '#fad61f', '#2154b3'], NM = ['빨강', '노랑', '파랑'];
+  const row = (label, m) => `<div class="pr"><b>${label}</b><span class="sw" style="background:rgb(${m.rgb})"></span><span class="bar">${m.ratio.map((v, k) => v ? `<i style="width:${v}%;background:${CC[k]}"></i>` : '').join('')}</span></div>
+    <div class="pr"><span></span><span></span><span class="nums">${m.dens < 3 ? '물감 없음' : m.ratio.map((v, k) => v ? `${NM[k]} ${v}` : '').filter(Boolean).join(' · ') + ` · 진하기 ${m.dens}%`}</span></div>`;
+  el.innerHTML = row('목표', a) + row('내 그림', b);
+  const r = cv.getBoundingClientRect(), wr = cv.parentElement.getBoundingClientRect();
+  const px = r.left - wr.left + probe.x / GW * r.width, py = r.top - wr.top + probe.y / GH * r.height;
+  el.hidden = false; const w = el.offsetWidth, h = el.offsetHeight;
+  el.style.left = Math.max(4, Math.min(wr.width - w - 4, px - w / 2)) + 'px';
+  el.style.top = (py - h - 22 > 0 ? py - h - 22 : py + 22) + 'px';
+}
+document.getElementById('probeBtn').onclick = e => { probing = !probing; e.currentTarget.setAttribute('aria-pressed', probing); if (!probing) probe = null; showProbe(); draw(); document.getElementById('hint').textContent = probing ? '그림의 한 곳을 누르면 목표와 내 그림의 물감 비율을 비교해요' : '팔레트에서 물감을 고르고 그림을 누르세요'; document.getElementById('hint').style.opacity = 1; };
+cv.addEventListener('pointerdown', e => {
+  if (probing) { const g = gridPos(e); probe = { x: g.x, y: g.y }; document.getElementById('hint').style.opacity = 0; showProbe(); draw(); return; }
+  if (busy || used >= maxDrops || (peek && !freeMode)) return;
+  const g = gridPos(e); cv.setPointerCapture(e.pointerId);
+  press = { x: g.x, y: g.y, t0: performance.now(), sy: e.clientY, cy: e.clientY };
+  document.getElementById('hint').style.opacity = 0;
+  const tick = () => { if (!press) return; const vol = Math.min(1, (performance.now() - press.t0) / 1400), h = 0; aim = { x: press.x, y: press.y, vol, h }; updatePreview(aim); draw(); raf = requestAnimationFrame(tick); };
+  tick();
+});
+cv.addEventListener('pointermove', e => { if (press) press.cy = e.clientY; });
+const endPress = e => {
+  if (!press) return; cancelAnimationFrame(raf);
+  const a = aim; press = null; aim = null; preview.key = ''; preview.img = null;
+  if (!a || e.type === 'pointercancel') { draw(); return; }
+  hist.push(cur.clone()); used++;
+  const d = [paintSpec(), Math.round(a.x * 10) / 10, Math.round(a.y * 10) / 10, Math.round(a.vol * 25) / 25]; log.push(d);
+  cur.drop(d[0], d[1], d[2], d[3], 0);
+  try { navigator.vibrate && navigator.vibrate(12); } catch (er) {}
+  flow();
+};
+cv.addEventListener('pointerup', endPress); cv.addEventListener('pointercancel', endPress);
+function flow() {
+  busy = true; updateInfo(); let i = 0;
+  const run = () => { let done = false; for (let k = 0; k < 14; k++) { const moved = cur.step(); i++; if ((moved < 0.01 && i > 61) || i >= 420) { done = true; break; } } draw(); if (done) { busy = false; updateInfo(); return; } requestAnimationFrame(run); };
+  run();
+}
+document.getElementById('btnUndo').onclick = () => { if (busy || !hist.length) return; cur = hist.pop(); used--; log.pop(); updateInfo(); draw(); };
+document.getElementById('btnReset').onclick = () => { if (busy) return; freeMode ? startFree(L) : startLevel(L); };
+const peekBtn = document.getElementById('peek');
+const setPeek = v => { peek = v; peekBtn.textContent = v ? '내 그림 보기' : '목표 겹쳐 보기'; draw(); };
+peekBtn.addEventListener('pointerdown', () => setPeek(true));
+['pointerup', 'pointerleave', 'pointercancel'].forEach(t => peekBtn.addEventListener(t, () => setPeek(false)));
+
+// ---------------- colours found ----------------
+function nearestSwatch(L) { let best = null, bd = 5; for (const s of SWATCHES) { const d = Math.abs(L[0] - s.lab[0]); if (d >= bd) continue; const e = dE(L, s.lab); if (e < bd) { bd = e; best = s; } } return best; }
+function discoverFrom(colors) { // colors: array of rgb; returns newly found swatches (also saved)
+  const cnt = new Map(), seen = new Map();
+  for (const rgb of colors) { const q = (rgb[0] >> 2) * 4096 + (rgb[1] >> 2) * 64 + (rgb[2] >> 2); let s = seen.get(q); if (s === undefined) { s = nearestSwatch(lab(rgb)); seen.set(q, s); } if (s) cnt.set(s, (cnt.get(s) || 0) + 1); }
+  const fresh = []; for (const [s, n] of cnt) if (n >= 4 && !save.dex[s.key]) { save.dex[s.key] = Date.now(); fresh.push(s); }
+  return fresh;
+}
+function findColors(canvas) { const cols = []; for (let c = 0; c < N; c++) { if (!canvas.mask[c]) continue; if (canvas.P[0][c] + canvas.P[1][c] + canvas.P[2][c] < 0.02) continue; cols.push(canvas.color(c)); } return cols; }
+const chipsHTML = list => `<div class="newc">${list.map(s => `<span class="chip"><i style="background:${s.hex}"></i>${s.name}</span>`).join('')}</div>`;
+const rgbCss = v => `rgb(${v[0]},${v[1]},${v[2]})`;
+document.getElementById('btnDone').onclick = async () => {
+  if (busy || !used) return;
+  if (freeMode) {
+    const fresh = discoverFrom(findColors(cur)), w = { lv: lv.id, d: log.map(x => Array.isArray(x[0]) ? [x[0].slice(), x[1], x[2], x[3]] : x.slice()), free2: 1, t: Date.now() };
+    save.gallery.unshift(w); if (save.gallery.length > 80) save.gallery.length = 80; persist();
+    await openWork(w);
+    document.getElementById('workNote').innerHTML = '작품에 저장했어요.' + (fresh.length ? `<br>새로 발견한 색 ${fresh.length}가지` + chipsHTML(fresh.slice(0, 12)) : '');
+    return;
+  }
+  const s = updateInfo(), pct = Math.round(s * 100), stars = pct >= 96 ? 3 : pct >= 90 ? 2 : pct >= 80 ? 1 : 0;
+  const fresh = discoverFrom(findColors(cur));
+  if (stars) { save.gallery.unshift({ lv: lv.id, d: log.map(x => x.slice()), pct, t: Date.now() }); if (save.gallery.length > 80) save.gallery.length = 80; save.best[lv.id] = Math.max(save.best[lv.id] || 0, pct); if (L + 1 < LEVELS.length) save.unlocked = Math.max(save.unlocked, L + 2); }
+  persist();
+  const next = L + 1 < LEVELS.length;
+  const body = document.getElementById('resultBody');
+  body.innerHTML = `<h2>${stars ? '완성했어요!' : '조금만 더!'}</h2>
+    <div class="big">${pct}%</div><div class="stars">${[1, 2, 3].map(i => `<span class="${i <= stars ? '' : 'off'}">★</span>`).join('')}</div>
+    <p>${stars ? (next ? '작품에 저장했고, 다음 그림이 열렸어요.' : '작품에 저장했어요. 모든 그림을 완성했어요.') : '80% 이상이면 다음 그림이 열려요. "다른 곳 표시"로 어디가 다른지 확인해 보세요.'}</p>
+    <div class="cmp"><figure><canvas id="rMine" width="240" height="324"></canvas><label style="display:inline-flex;gap:4px;align-items:center"><input type="checkbox" id="rDiff">다른 곳 표시</label></figure><figure><canvas id="rGoal" width="240" height="324"></canvas>목표</figure></div>
+    ${fresh.length ? `<p><b style="color:var(--ink)">새로 발견한 색 ${fresh.length}가지</b></p>${chipsHTML(fresh.slice(0, 24))}${fresh.length > 24 ? `<p>외 ${fresh.length - 24}가지</p>` : ''}` : ''}
+    ${stars ? '<div class="row"><button id="rShare">공유하기</button></div>' : ''}<div class="row"><button id="rRetry">다시 하기</button>${stars && next ? '<button class="primary" id="rNext">다음 그림</button>' : ''}</div>`;
+  renderObject(document.getElementById('rMine'), cur, lv, 240, 324, false);
+  const dm = diffMap(cur, target), drawMine = on => { const el = document.getElementById('rMine'); renderObject(el, cur, lv, 240, 324, false); if (!on) return; const g = el.getContext('2d'), u = 240 / GW;
+    g.save(); for (let c = 0; c < N; c++) { if (dm[c] < 26) continue; const x = (c % GW + 0.5) * u, y = (((c / GW) | 0) + 0.5) * u; g.fillStyle = dm[c] > 40 ? 'rgba(40,30,20,.55)' : 'rgba(40,30,20,.28)'; g.beginPath(); g.arc(x, y, u * 0.32, 0, 7); g.fill(); } g.restore(); };
+  document.getElementById('rDiff').onchange = e => drawMine(e.target.checked);
+  renderObject(document.getElementById('rGoal'), target, lv, 240, 324, false);
+  document.getElementById('mResult').hidden = false;
+  const sb = document.getElementById('rShare'); if (sb) { sb.disabled = true; prepShare(lv, cur, pct, Date.now()).then(() => { sb.disabled = false; }); sb.onclick = doShare; }
+  document.getElementById('rRetry').onclick = () => { document.getElementById('mResult').hidden = true; startLevel(L); };
+  const nb = document.getElementById('rNext'); if (nb) nb.onclick = () => { document.getElementById('mResult').hidden = true; startLevel(L + 1); };
+};
+let dexPick = null;
+function openDex(pick) {
+  dexPick = pick || null;
+  const n = SWATCHES.filter(s => save.dex[s.key]).length;
+  document.getElementById('dexCount').textContent = pick ? '칠할 색을 고르세요. 발견한 색만 쓸 수 있어요.' : `발견한 색 ${n} / ${SWATCHES.length} · 퍼즐이나 자유 칠하기를 완성하면, 그림 속에 나온 색이 기록돼요.`;
+  const fams = []; SWATCHES.forEach(s => { let f = fams.find(x => x.f === s.fam); if (!f) fams.push(f = { f: s.fam, list: [] }); f.list.push(s); });
+  document.getElementById('dexGrid').innerHTML = `<div id="dexInfo">색을 눌러 보세요.</div>` + fams.map(f => { const got = f.list.filter(s => save.dex[s.key]).length;
+    return `<h3>${f.f} 계열 <small>${got} / ${f.list.length}</small></h3><div class="dexrow">${f.list.map(s => save.dex[s.key] ? `<button class="dc" data-k="${s.key}" style="background:${s.hex}" title="${s.name}"></button>` : `<button class="dc no" data-k="${s.key}"></button>`).join('')}</div>`; }).join('');
+  document.getElementById('mDex').hidden = false;
+}
+document.getElementById('dexGrid').addEventListener('click', e => {
+  const b = e.target.closest('.dc'); if (!b) return; const s = swByKey[b.dataset.k], info = document.getElementById('dexInfo');
+  document.querySelectorAll('#dexGrid .dc.sel').forEach(x => x.classList.remove('sel')); b.classList.add('sel');
+  if (!save.dex[s.key]) { info.innerHTML = `<i class="big no"></i><div><b>No.${s.no} ???</b><span>${s.hint} 쪽 색이에요. 아직 발견하지 못했어요.</span></div>`; return; }
+  const NM = ['빨강', '노랑', '파랑'], rec = s.pig.map((v, k) => v ? `${NM[k]} ${Math.round(v * 100)}` : '').filter(Boolean).join(' · ');
+  info.innerHTML = `<i class="big" style="background:${s.hex}"></i><div><b>No.${s.no} ${s.name} <small style="font-weight:500;color:var(--muted)">${s.en}</small></b><span>${s.ko} · ${s.hex} · ${rec} · 진하기 ${Math.round(Math.min(1, s.amt / 0.32) * 100)}%</span></div>`;
+  if (dexPick) { dexPick(s); document.getElementById('mDex').hidden = true; }
+});
+document.getElementById('btnDex').onclick = () => openDex();
+document.getElementById('btnLevels').onclick = () => {
+  const g = document.getElementById('levelGrid');
+  g.innerHTML = LEVELS.map((l, i) => { const b = save.best[l.id] || 0, st = b >= 96 ? 3 : b >= 90 ? 2 : b >= 80 ? 1 : 0; return `<button data-i="${i}" ${i < save.unlocked ? '' : 'disabled'}><canvas width="120" height="162"></canvas>${i < save.unlocked ? l.name : '잠김'}<span class="st">${'★'.repeat(st)}${'☆'.repeat(3 - st)}</span></button>`; }).join('');
+  g.querySelectorAll('button').forEach(b => { const l = LEVELS[+b.dataset.i]; if (+b.dataset.i < save.unlocked) { const t = l.target || (l.target = makeTarget(l)); renderObject(b.querySelector('canvas'), t, l, 120, 162, false); } b.onclick = () => { document.getElementById('mLevels').hidden = true; startLevel(+b.dataset.i); }; });
+  document.getElementById('mLevels').hidden = false;
+};
+// ---------------- finished works: kept as their drops, replayed on demand ----------------
+save.gallery = save.gallery || [];
+function replay(work) { const l = LEVELS.find(x => x.id === work.lv); if (!l) return null; const c = new Canvas(prepLevel(l).mask); for (const d of work.d) { c.drop(d[0], d[1], d[2], d[3], 0); c.settle(); } return { l, c }; }
+const starsOf = p => p >= 96 ? 3 : p >= 90 ? 2 : p >= 80 ? 1 : 0;
+function cardBlob(l, c, pct, when) {
+  const W = 1080, H = 1350, cv2 = document.createElement('canvas'); cv2.width = W; cv2.height = H; const g = cv2.getContext('2d');
+  const art = document.createElement('canvas'); art.width = 820; art.height = 1107; renderObject(art, c, l, 820, 1107, true);
+  const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#f7f2ea'); bg.addColorStop(1, '#e6ddcf'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  g.drawImage(art, 130, 20);
+  g.fillStyle = '#3b3530'; g.textAlign = 'left'; g.font = '700 54px -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif'; g.fillText(l.name, 90, 1215);
+  g.font = '600 40px -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif';
+  if (pct == null) { g.fillStyle = '#8a8178'; g.fillText('자유 칠하기', 90, 1275); }
+  else { g.fillStyle = '#e2a93b'; const st = starsOf(pct); g.fillText('★'.repeat(st) + '☆'.repeat(3 - st), 90, 1275); g.fillStyle = '#8a8178'; g.fillText(`목표와 ${pct}% 닮음`, 260, 1275); }
+  g.textAlign = 'right'; g.font = '700 38px -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif'; g.fillStyle = '#3b3530'; g.fillText('물감 한 방울', W - 90, 1215);
+  g.font = '500 30px -apple-system, sans-serif'; g.fillStyle = '#8a8178'; g.fillText(new Date(when).toLocaleDateString('ko-KR'), W - 90, 1270);
+  return new Promise(r => cv2.toBlob(b => r(b), 'image/png'));
+}
+const dlP = (window.claude && typeof window.claude.use === 'function') ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
+let shareBlob = null, shareName = '';
+async function doShare() {
+  if (!shareBlob) return;
+  const file = new File([shareBlob], shareName, { type: 'image/png' });
+  try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: '물감 한 방울' }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  const dl = await Promise.race([dlP, new Promise(r => setTimeout(() => r(null), 1500))]);
+  if (dl) { try { await dl.save({ filename: shareName, data: shareBlob }); return; } catch (e) { if (e && e.code === 'declined') return; } }
+  // last resort: show the picture so it can be long-pressed and saved
+  const url = URL.createObjectURL(shareBlob); document.getElementById('workImg').src = url;
+  document.getElementById('workNote').textContent = '이미지를 길게 눌러 저장하거나 공유하세요.'; document.getElementById('mWork').hidden = false;
+}
+async function prepShare(l, c, pct, when) { shareBlob = null; shareName = `물감한방울-${l.name}${pct == null ? '' : '-' + pct}.png`; shareBlob = await cardBlob(l, c, pct, when); return shareBlob; }
+async function openWork(w) {
+  let b;
+  if (w.free) { const sk = SKETCHES.find(x => x.id === w.free); if (!sk) return; shareName = `물감한방울-${sk.name}.png`; shareBlob = null; b = shareBlob = await freeCard(sk, Paper.decode(w.g), w.t); }
+  else { const r = replay(w); if (!r) return; b = await prepShare(r.l, r.c, w.pct, w.t); }
+  document.getElementById('workImg').src = URL.createObjectURL(b);
+  document.getElementById('workNote').textContent = w.free ? `${new Date(w.t).toLocaleDateString('ko-KR')} · 수채화` : w.free2 ? `${new Date(w.t).toLocaleDateString('ko-KR')} · 자유 칠하기` : `${new Date(w.t).toLocaleDateString('ko-KR')} · ${w.pct}%`;
+  document.getElementById('mWork').hidden = false;
+}
+document.getElementById('workShare').onclick = doShare;
+document.getElementById('btnGal').onclick = () => {
+  const g = document.getElementById('galGrid'), G = save.gallery;
+  document.getElementById('galCount').textContent = G.length ? `완성한 작품 ${G.length}점 · 눌러서 크게 보고 공유할 수 있어요.` : '아직 완성한 작품이 없어요. 80% 이상으로 완성하면 여기에 모여요.';
+  g.innerHTML = G.map((w, i) => { if (w.free) { const sk = SKETCHES.find(x => x.id === w.free); return `<button data-i="${i}"><canvas width="120" height="160"></canvas>${sk ? sk.name : ''}<small>수채화</small></button>`; } const l = LEVELS.find(x => x.id === w.lv); if (w.free2) return `<button data-i="${i}"><canvas width="120" height="162"></canvas>${l ? l.name : ''}<small>자유 칠하기</small></button>`; return `<button data-i="${i}"><canvas width="120" height="162"></canvas>${l ? l.name : ''}<span class="st">${'★'.repeat(starsOf(w.pct))}${'☆'.repeat(3 - starsOf(w.pct))}</span><small>${w.pct}%</small></button>`; }).join('');
+  document.getElementById('mGal').hidden = false;
+  const btns = [...g.querySelectorAll('button')]; let k = 0;
+  const next = () => { if (k >= btns.length || document.getElementById('mGal').hidden) return; const b = btns[k++], w = G[+b.dataset.i]; if (w.free) { const sk = SKETCHES.find(x => x.id === w.free); if (sk) drawPage(b.querySelector('canvas').getContext('2d'), Paper.decode(w.g), sk, 120, 160); } else { const r = replay(w); if (r) renderObject(b.querySelector('canvas'), r.c, r.l, 120, 162, false); } b.onclick = () => openWork(w); setTimeout(next, 0); };
+  next();
+};
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => b.closest('.modal').hidden = true);
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.hidden = true; }));
+
+
+// ================= free mode: watercolour on a sketchbook page =================
+const FW = 120, FH = 160, FN = FW * FH;
+class Paper {
+  constructor() { this.L = new Float32Array(FN); this.P = [0, 1, 2].map(() => new Float32Array(FN)); this.D = [0, 1, 2].map(() => new Float32Array(FN)); this.wet = false; }
+  snap() { return { L: this.L.slice(), P: this.P.map(a => a.slice()), D: this.D.map(a => a.slice()) }; }
+  restore(s) { this.L.set(s.L); for (let k = 0; k < 3; k++) { this.P[k].set(s.P[k]); this.D[k].set(s.D[k]); } this.wet = true; }
+  // a dab of the brush: water (and pigment, unless it is the water brush) under a soft round tip
+  dab(x, y, r, water, pig, conc) {
+    const R2 = Math.ceil(r * 2);
+    for (let j = Math.floor(y) - R2; j <= Math.ceil(y) + R2; j++) { if (j < 0 || j >= FH) continue;
+      for (let i = Math.floor(x) - R2; i <= Math.ceil(x) + R2; i++) { if (i < 0 || i >= FW) continue;
+        const dd = ((i + 0.5 - x) ** 2 + (j + 0.5 - y) ** 2) / (r * r); if (dd > 2.6) continue;
+        const c = j * FW + i, a = water * Math.exp(-dd * dd * 0.6); this.L[c] += a;
+        if (pig) { for (let k = 0; k < 3; k++) this.P[k][c] += a * pig[k] * conc; }
+        else { const lift = Math.min(0.35, a * 1.5); for (let k = 0; k < 3; k++) { const m = this.D[k][c] * lift; this.D[k][c] -= m; this.P[k][c] += m; } } } }
+    this.wet = true;
+  }
+  step() {
+    const cap = 0.24, L = this.L, P = this.P, D = this.D;
+    const dL = new Float32Array(FN), dP = [new Float32Array(FN), new Float32Array(FN), new Float32Array(FN)];
+    const edge = (c, n) => {
+      const a = L[c], b = L[n], hi = a > b ? c : n, lo = a > b ? n : c, Lh = Math.max(a, b), Ll = Math.min(a, b);
+      if (Lh > cap) { const f = 0.22 * Math.min(Lh - cap, Lh - Ll); if (f > 1e-5) { const fr = f / Lh; dL[hi] -= f; dL[lo] += f; for (let k = 0; k < 3; k++) { const p = P[k][hi] * fr; dP[k][hi] -= p; dP[k][lo] += p; } } }
+      const w = Math.min(a, b); if (w > 0.04) for (let k = 0; k < 3; k++) { const f = 0.18 * (P[k][c] / a - P[k][n] / b) * w; dP[k][c] -= f; dP[k][n] += f; }
+    };
+    for (let c = 0; c < FN; c++) { const x = c % FW; if (!L[c]) continue; if (x < FW - 1) edge(c, c + 1); if (c + FW < FN) edge(c, c + FW); if (x > 0 && !L[c - 1]) edge(c, c - 1); if (c >= FW && !L[c - FW]) edge(c, c - FW); }
+    let wet = false;
+    for (let c = 0; c < FN; c++) {
+      if (!L[c] && !dL[c]) continue;
+      let l = Math.max(0, L[c] + dL[c]) * 0.9978; for (let k = 0; k < 3; k++) P[k][c] = Math.max(0, P[k][c] + dP[k][c]);
+      // as the paper dries, pigment settles into it and stops moving
+      if (l < 0.12) { const f = l < 0.004 ? 1 : 0.03 + (0.12 - l) * 0.5; for (let k = 0; k < 3; k++) { const m = P[k][c] * f; P[k][c] -= m; D[k][c] += m; } if (l < 0.004) l = 0; }
+      L[c] = l; if (l > 0.004) wet = true;
+    }
+    this.wet = wet;
+  }
+  color(c) { return pigColor(this.P[0][c] + this.D[0][c], this.P[1][c] + this.D[1][c], this.P[2][c] + this.D[2][c]); }
+  encode() { const b = new Uint8Array(FN * 3); for (let c = 0; c < FN; c++) for (let k = 0; k < 3; k++) b[c * 3 + k] = Math.min(255, Math.round((this.P[k][c] + this.D[k][c]) / 1.5 * 255)); let s = ''; for (let i = 0; i < b.length; i += 8192) s += String.fromCharCode.apply(null, b.subarray(i, i + 8192)); return btoa(s); }
+  static decode(str) { const p = new Paper(), s = atob(str); for (let c = 0; c < FN; c++) for (let k = 0; k < 3; k++) p.D[k][c] = s.charCodeAt(c * 3 + k) / 255 * 1.5; p.wet = false; return p; }
+}
+
+// ---- sketches: pencil line art on a 300 x 400 page ----
+const pine = (g, x, y, h) => { g.moveTo(x, y); g.lineTo(x, y - h * 0.15); for (let i = 0; i < 3; i++) { const t = y - h * (0.15 + i * 0.25), w = h * (0.32 - i * 0.08); g.moveTo(x - w, t); g.lineTo(x, t - h * 0.38); g.lineTo(x + w, t); g.closePath(); } };
+const cloud = (g, x, y, s) => { g.moveTo(x - 30 * s, y); g.bezierCurveTo(x - 34 * s, y - 14 * s, x - 18 * s, y - 20 * s, x - 10 * s, y - 13 * s); g.bezierCurveTo(x - 6 * s, y - 28 * s, x + 16 * s, y - 28 * s, x + 18 * s, y - 13 * s); g.bezierCurveTo(x + 30 * s, y - 18 * s, x + 40 * s, y - 4 * s, x + 32 * s, y); g.closePath(); };
+const SKETCHES = [
+  { id: 'lake', name: '호숫가 오두막', draw(g) {
+    g.moveTo(252, 70); g.arc(230, 70, 22, 0, Math.PI * 2);
+    cloud(g, 70, 70, 1); cloud(g, 165, 105, 0.75);
+    g.moveTo(0, 190); [[50, 130], [85, 165], [130, 105], [185, 170], [230, 135], [300, 182]].forEach(p => g.lineTo(...p));
+    g.moveTo(0, 222); g.bezierCurveTo(60, 190, 110, 215, 170, 196); g.bezierCurveTo(220, 182, 260, 214, 300, 205);
+    g.moveTo(0, 252); g.bezierCurveTo(80, 242, 220, 247, 300, 256);
+    g.moveTo(0, 330); g.bezierCurveTo(90, 316, 200, 336, 300, 322);
+    [[40, 275, 90], [120, 290, 160], [200, 270, 250], [70, 305, 120], [180, 300, 230]].forEach(([a, y, b]) => { g.moveTo(a, y); g.lineTo(b, y); });
+    g.rect(190, 222, 55, 28); g.moveTo(184, 224); g.lineTo(217, 198); g.lineTo(251, 224); g.rect(210, 234, 12, 16); g.rect(228, 230, 10, 10); g.moveTo(236, 205); g.lineTo(236, 214); g.moveTo(242, 210); g.lineTo(242, 205); g.lineTo(236, 205);
+    pine(g, 30, 254, 62); pine(g, 58, 258, 46); pine(g, 274, 258, 56);
+    for (let i = 0; i < 16; i++) { const x = 10 + i * 18 + (i % 3) * 4, y = 372 + (i % 2) * 14; g.moveTo(x - 5, y - 9); g.lineTo(x, y); g.lineTo(x + 4, y - 11); }
+    [[52, 345], [62, 340], [240, 350]].forEach(([x, y]) => { g.moveTo(x, y + 30); g.quadraticCurveTo(x + 2, y + 12, x, y); g.moveTo(x + 3, y + 6); g.ellipse(x, y + 6, 3, 7, 0, 0, Math.PI * 2); });
+  } },
+  { id: 'sea', name: '바닷가 등대', draw(g) {
+    g.moveTo(100, 150); g.arc(80, 150, 20, 0, Math.PI * 2);
+    cloud(g, 200, 60, 0.9); cloud(g, 60, 80, 0.6);
+    [[150, 92], [168, 84]].forEach(([x, y]) => { g.moveTo(x - 8, y); g.quadraticCurveTo(x - 4, y - 5, x, y); g.quadraticCurveTo(x + 4, y - 5, x + 8, y); });
+    g.moveTo(0, 175); g.lineTo(300, 175);
+    [[0, 200, 160], [20, 228, 150], [0, 258, 140]].forEach(([a, y, b]) => { g.moveTo(a, y); for (let x = a; x < b; x += 20) g.quadraticCurveTo(x + 10, y - 5, x + 20, y); });
+    g.moveTo(52, 215); g.lineTo(110, 215); g.quadraticCurveTo(100, 230, 82, 230); g.quadraticCurveTo(62, 230, 52, 215); g.moveTo(80, 215); g.lineTo(80, 158); g.moveTo(83, 162); g.lineTo(83, 210); g.lineTo(108, 210); g.closePath();
+    g.moveTo(165, 400); g.lineTo(185, 300); g.bezierCurveTo(195, 270, 230, 262, 300, 252);
+    g.moveTo(222, 264); g.lineTo(232, 172); g.lineTo(258, 172); g.lineTo(268, 262);
+    g.moveTo(230, 200); g.lineTo(260, 200); g.moveTo(228, 230); g.lineTo(263, 230);
+    g.rect(230, 152, 30, 20); g.moveTo(226, 152); g.lineTo(245, 132); g.lineTo(264, 152); g.rect(240, 242, 10, 18);
+    g.moveTo(0, 318); g.bezierCurveTo(60, 300, 120, 308, 175, 330);
+    g.moveTo(0, 300); g.bezierCurveTo(40, 290, 90, 296, 150, 300);
+    [[30, 360], [90, 375], [130, 352]].forEach(([x, y]) => { g.moveTo(x - 6, y); g.quadraticCurveTo(x, y - 6, x + 6, y); g.quadraticCurveTo(x, y + 4, x - 6, y); });
+  } },
+  { id: 'field', name: '풍차 들판', draw(g) {
+    cloud(g, 80, 70, 1.1); cloud(g, 220, 110, 0.7);
+    g.moveTo(0, 220); g.bezierCurveTo(70, 200, 140, 210, 200, 226); g.bezierCurveTo(240, 236, 270, 230, 300, 222);
+    g.moveTo(0, 280); g.bezierCurveTo(100, 262, 200, 270, 300, 290);
+    g.moveTo(180, 238); g.lineTo(186, 160); g.lineTo(206, 160); g.lineTo(212, 238); g.moveTo(186, 160); g.lineTo(196, 146); g.lineTo(206, 160); g.rect(192, 218, 8, 16);
+    const cx = 196, cy = 160; [[0], [Math.PI / 2], [Math.PI], [Math.PI * 1.5]].forEach(([a]) => { const ax = cx + Math.cos(a + 0.3) * 58, ay = cy + Math.sin(a + 0.3) * 58, bx = cx + Math.cos(a + 0.45) * 58, by = cy + Math.sin(a + 0.45) * 58; g.moveTo(cx, cy); g.lineTo(ax, ay); g.lineTo(bx, by); g.lineTo(cx + Math.cos(a + 0.42) * 14, cy + Math.sin(a + 0.42) * 14); });
+    for (let row = 0; row < 3; row++) for (let i = 0; i < 9; i++) { const x = 15 + i * 34 + row * 11, y = 310 + row * 30; g.moveTo(x, y + 14); g.lineTo(x, y); g.moveTo(x + 5, y - 4); g.arc(x, y - 4, 5, 0, Math.PI * 2); }
+    g.moveTo(60, 400); g.bezierCurveTo(100, 340, 130, 300, 175, 240);
+    g.moveTo(120, 400); g.bezierCurveTo(140, 340, 160, 300, 190, 240);
+  } },
+];
+const sketchCache = {};
+function sketchCanvas(sk, W, H) {
+  const key = sk.id + W; if (sketchCache[key]) return sketchCache[key];
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  g.scale(W / 300, H / 400); g.lineCap = 'round'; g.lineJoin = 'round';
+  for (const [dx, dy, a, lw] of [[0, 0, 0.75, 1.1], [0.5, 0.35, 0.35, 0.7]]) { g.save(); g.translate(dx, dy); g.strokeStyle = `rgba(78,72,66,${a})`; g.lineWidth = lw; g.beginPath(); sk.draw(g); g.stroke(); g.restore(); }
+  return (sketchCache[key] = c);
+}
+
+// ---- rendering a page ----
+const fsmall = document.createElement('canvas'); fsmall.width = FW; fsmall.height = FH; const fsx = fsmall.getContext('2d'), fimg = fsx.createImageData(FW, FH);
+const fmid = document.createElement('canvas'); fmid.width = FW * 3; fmid.height = FH * 3; const fmx = fmid.getContext('2d');
+function paperImage(pp) {
+  const T = new Float32Array(FN); for (let c = 0; c < FN; c++) T[c] = pp.P[0][c] + pp.P[1][c] + pp.P[2][c] + pp.D[0][c] + pp.D[1][c] + pp.D[2][c];
+  for (let c = 0; c < FN; c++) { let v; const t = T[c];
+    if (t < 0.003) v = PAPER; else { v = pp.color(c); const x = c % FW; let mn = t; if (x > 0) mn = Math.min(mn, T[c - 1]); if (x < FW - 1) mn = Math.min(mn, T[c + 1]); if (c >= FW) mn = Math.min(mn, T[c - FW]); if (c + FW < FN) mn = Math.min(mn, T[c + FW]);
+      const k = 1 - 0.12 * Math.max(0, Math.min(1, (0.5 - mn / t) / 0.5)); v = [v[0] * k, v[1] * k, v[2] * k]; }
+    fimg.data[c * 4] = v[0]; fimg.data[c * 4 + 1] = v[1]; fimg.data[c * 4 + 2] = v[2]; fimg.data[c * 4 + 3] = 255; }
+  fsx.putImageData(fimg, 0, 0);
+  fmx.imageSmoothingEnabled = true; fmx.imageSmoothingQuality = 'high'; fmx.drawImage(fsmall, 0, 0, fmid.width, fmid.height);
+  return fmid;
+}
+function drawPage(g, pp, sk, W, H, view) {
+  const v = view || { s: 1, x: 0, y: 0 };
+  g.save(); g.fillStyle = '#d9d1c4'; g.fillRect(0, 0, W, H);
+  g.translate(v.x, v.y); g.scale(v.s, v.s);
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  g.drawImage(paperImage(pp), 0, 0, W, H);
+  g.globalCompositeOperation = 'multiply'; g.globalAlpha = 0.5; g.fillStyle = g.createPattern(paperTex, 'repeat'); g.fillRect(0, 0, W, H);
+  g.globalAlpha = 0.95; g.drawImage(sketchCanvas(sk, 900, 1200), 0, 0, W, H);
+  g.restore();
+}
+
+// ---- the free-mode screen ----
+const fcv = document.getElementById('fcv'), fctx = fcv.getContext('2d');
+let paper = new Paper(), sketch = SKETCHES[0], brush = 'mid', fpaint = null, fundo = [], view = { s: 1, x: 0, y: 0 }, fLoop = 0, dirty = true;
+const BR = { big: 5, mid: 2.8, fine: 1.4, water: 3.6 };
+function freePalette() {
+  const items = [...PAINTS.map(p => ({ name: p.name, css: p.css, pig: [p.k === 'r' ? 1 : 0, p.k === 'y' ? 1 : 0, p.k === 'b' ? 1 : 0], conc: 1 })),
+    ...SWATCHES.filter(s => save.dex[s.key]).sort((a, b) => save.dex[b.key] - save.dex[a.key]).slice(0, 16).map(s => ({ name: s.name, css: s.hex, pig: s.pig, conc: s.conc }))];
+  if (fpaint && !items.some(p => p.name === fpaint.name && p.css === fpaint.css)) items.splice(3, 0, fpaint);
+  if (!fpaint) fpaint = items[0];
+  const el = document.getElementById('fpal');
+  el.innerHTML = items.map((p, i) => `<button class="paint" data-i="${i}" style="--c:${p.css}" aria-pressed="${p.name === fpaint.name && p.css === fpaint.css}"><div class="well"><div class="cake"></div></div><span>${p.name}</span></button>`).join('') + `<button class="paint" id="fMore"><div class="well"><div class="cake" style="--c:#efe9df;display:flex;align-items:center;justify-content:center;font-size:18px;color:#8a8178">⋯</div></div><span>도감에서</span></button>`;
+  el.onclick = e => { if (e.target.closest('#fMore')) { openDex(s => { fpaint = { name: s.name, css: s.hex, pig: s.pig, conc: s.conc }; if (brush === 'water') setBrush('mid'); freePalette(); }); return; } const b = e.target.closest('.paint'); if (!b) return; fpaint = items[+b.dataset.i]; if (brush === 'water') setBrush('mid'); el.querySelectorAll('.paint').forEach(x => x.setAttribute('aria-pressed', x === b)); };
+}
+function setBrush(b) { brush = b; document.querySelectorAll('#brushes button').forEach(x => x.setAttribute('aria-pressed', x.dataset.b === b)); }
+document.getElementById('brushes').onclick = e => { const b = e.target.closest('button'); if (b) setBrush(b.dataset.b); };
+function fSize() { const r = fcv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1); fcv.width = Math.round(r.width * dpr); fcv.height = Math.round(r.width * 4 / 3 * dpr); dirty = true; }
+new ResizeObserver(fSize).observe(fcv);
+function clampView() { const W = fcv.width, H = fcv.height; view.s = Math.max(1, Math.min(4, view.s)); view.x = Math.min(0, Math.max(W - W * view.s, view.x)); view.y = Math.min(0, Math.max(H - H * view.s, view.y)); }
+function frame() {
+  if (document.getElementById('freeApp').hidden) { fLoop = 0; return; }
+  if (stroke && stroke.hold) depositAt(stroke.lx, stroke.ly, 0.5);
+  if (paper.wet) { for (let i = 0; i < 3; i++) paper.step(); dirty = true; }
+  if (dirty && fcv.width) { drawPage(fctx, paper, sketch, fcv.width, fcv.height, view); dirty = false; }
+  fLoop = requestAnimationFrame(frame);
+}
+function toPaper(e) { const r = fcv.getBoundingClientRect(), k = fcv.width / r.width; const sx = (e.clientX - r.left) * k, sy = (e.clientY - r.top) * k; return { x: (sx - view.x) / view.s / fcv.width * FW, y: (sy - view.y) / view.s / fcv.height * FH }; }
+function depositAt(x, y, amount) {
+  const r = BR[brush];
+  if (brush === 'water') paper.dab(x, y, r, 0.08 * amount, null, 0);
+  else paper.dab(x, y, r, 0.08 * amount, fpaint.pig, fpaint.conc);
+}
+let stroke = null; const ptrs = new Map(); let pinch = null;
+fcv.addEventListener('pointerdown', e => {
+  fcv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  document.getElementById('fHint').style.opacity = 0;
+  if (ptrs.size === 2) { // second finger: this is a zoom/pan, not a stroke
+    if (stroke) { paper.restore(stroke.before); fundo.pop(); stroke = null; dirty = true; }
+    const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, s: view.s, vx: view.x, vy: view.y }; return;
+  }
+  if (ptrs.size > 2) return;
+  const p = toPaper(e), before = paper.snap(); fundo.push(before); if (fundo.length > 25) fundo.shift();
+  stroke = { lx: p.x, ly: p.y, t: performance.now(), before, hold: true };
+  depositAt(p.x, p.y, 1);
+});
+fcv.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && ptrs.size === 2) { const [a, b] = [...ptrs.values()], r = fcv.getBoundingClientRect(), k = fcv.width / r.width;
+    const d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, ns = Math.max(1, Math.min(4, pinch.s * d / pinch.d));
+    const px = ((pinch.mx - r.left) * k - pinch.vx) / pinch.s, py = ((pinch.my - r.top) * k - pinch.vy) / pinch.s;
+    view.s = ns; view.x = (mx - r.left) * k - px * ns; view.y = (my - r.top) * k - py * ns; clampView(); dirty = true; return; }
+  if (!stroke) return;
+  const p = toPaper(e), now = performance.now(), dx = p.x - stroke.lx, dy = p.y - stroke.ly, dist = Math.hypot(dx, dy);
+  if (dist < 0.15) return;
+  const speed = dist / Math.max(4, now - stroke.t), r = BR[brush], stepLen = Math.max(0.25, r * 0.35), n = Math.ceil(dist / stepLen);
+  const load = 1.25 - Math.min(1, speed / 0.06) * 0.85; // slow strokes leave more paint
+  for (let i = 1; i <= n; i++) depositAt(stroke.lx + dx * i / n, stroke.ly + dy * i / n, load * stepLen / (r * 0.35));
+  stroke.lx = p.x; stroke.ly = p.y; stroke.t = now; stroke.hold = false; clearTimeout(stroke.ht); stroke.ht = setTimeout(() => { if (stroke) stroke.hold = true; }, 180);
+});
+const fEnd = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (stroke) { clearTimeout(stroke.ht); stroke = null; } };
+fcv.addEventListener('pointerup', fEnd); fcv.addEventListener('pointercancel', fEnd);
+fcv.addEventListener('wheel', e => { e.preventDefault(); const r = fcv.getBoundingClientRect(), k = fcv.width / r.width, sx = (e.clientX - r.left) * k, sy = (e.clientY - r.top) * k;
+  const ns = Math.max(1, Math.min(4, view.s * Math.exp(-e.deltaY * 0.002))), px = (sx - view.x) / view.s, py = (sy - view.y) / view.s; view.s = ns; view.x = sx - px * ns; view.y = sy - py * ns; clampView(); dirty = true; }, { passive: false });
+document.getElementById('fUndo').onclick = () => { const s = fundo.pop(); if (s) { paper.restore(s); dirty = true; } };
+function openFree(sk) {
+  if (sk && sk !== sketch) { sketch = sk; paper = new Paper(); fundo = []; view = { s: 1, x: 0, y: 0 }; }
+  document.getElementById('fTitle').textContent = sketch.name;
+  document.getElementById('app').hidden = true; document.getElementById('freeApp').hidden = false;
+  freePalette(); fSize(); dirty = true; if (!fLoop) fLoop = requestAnimationFrame(frame);
+}
+document.getElementById('btnFree').onclick = () => {
+  const g = document.getElementById('sketchGrid');
+  document.querySelector('#mSketch h2').textContent = '자유 칠하기'; document.querySelector('#mSketch p').textContent = '목표 없이 마음대로 칠해요. 퍼즐을 풀수록 칠할 물건이 늘어나고, 찾은 색도 쓸 수 있어요.';
+  g.innerHTML = LEVELS.map((l, i) => `<button data-i="${i}" ${i < save.unlocked ? '' : 'disabled'}><canvas width="120" height="162"></canvas>${i < save.unlocked ? l.name : '잠김'}</button>`).join('');
+  g.querySelectorAll('button').forEach(b => { const i = +b.dataset.i, l = LEVELS[i]; if (i < save.unlocked) renderObject(b.querySelector('canvas'), new Canvas(prepLevel(l).mask), l, 120, 162, false); b.onclick = () => { document.getElementById('mSketch').hidden = true; startFree(i); }; });
+  document.getElementById('mSketch').hidden = false;
+};
+document.getElementById('fBack').onclick = () => { document.getElementById('freeApp').hidden = true; document.getElementById('app').hidden = false; sizeCanvas(); };
+document.getElementById('fSketch').onclick = () => {
+  const g = document.getElementById('sketchGrid');
+  g.innerHTML = SKETCHES.map((sk, i) => `<button data-i="${i}"><canvas width="120" height="160"></canvas>${sk.name}</button>`).join('');
+  g.querySelectorAll('button').forEach(b => { const sk = SKETCHES[+b.dataset.i]; drawPage(b.querySelector('canvas').getContext('2d'), new Paper(), sk, 120, 160); b.onclick = () => { document.getElementById('mSketch').hidden = true; if (sk !== sketch && fundo.length && !confirm('지금 그림을 지우고 새 밑그림으로 시작할까요?')) return; openFree(sk); }; });
+  document.getElementById('mSketch').hidden = false;
+};
+function freeCard(sk, pp, when) {
+  const W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, '#f7f2ea'); bg.addColorStop(1, '#e6ddcf'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  const art = document.createElement('canvas'); art.width = 840; art.height = 1120; drawPage(art.getContext('2d'), pp, sk, 840, 1120);
+  g.save(); g.shadowColor = 'rgba(60,40,20,.25)'; g.shadowBlur = 24; g.shadowOffsetY = 6; g.drawImage(art, 120, 40); g.restore();
+  g.fillStyle = '#3b3530'; g.font = '700 50px -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif'; g.textAlign = 'left'; g.fillText(sk.name, 120, 1240);
+  g.font = '500 32px -apple-system, sans-serif'; g.fillStyle = '#8a8178'; g.fillText('수채화 · ' + new Date(when).toLocaleDateString('ko-KR'), 120, 1292);
+  g.textAlign = 'right'; g.font = '700 38px -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif'; g.fillStyle = '#3b3530'; g.fillText('물감 한 방울', W - 120, 1240);
+  return new Promise(r => c.toBlob(b => r(b), 'image/png'));
+}
+document.getElementById('fDone').onclick = async () => {
+  for (let i = 0; i < 600 && paper.wet; i++) paper.step(); // let it dry first
+  const cols = []; for (let c = 0; c < FN; c++) { const t = paper.D[0][c] + paper.D[1][c] + paper.D[2][c] + paper.P[0][c] + paper.P[1][c] + paper.P[2][c]; if (t > 0.01) cols.push(paper.color(c)); }
+  const fresh = discoverFrom(cols);
+  const w = { free: sketch.id, g: paper.encode(), t: Date.now() };
+  save.gallery.unshift(w); let nf = 0; save.gallery = save.gallery.filter(x => !x.free || ++nf <= 25); if (save.gallery.length > 80) save.gallery.length = 80; persist(); dirty = true;
+  await openWork(w);
+  if (fresh.length) document.getElementById('workNote').innerHTML = `새로 발견한 색 ${fresh.length}가지` + chipsHTML(fresh.slice(0, 12));
+};
+
+persistMigrate();
+startLevel(Math.min(save.unlocked, LEVELS.length) - 1);
+new ResizeObserver(sizeCanvas).observe(cv);
+</script>
+<script>if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});</script>
+</body>
+</html>
