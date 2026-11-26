@@ -311,12 +311,16 @@ const LEVELS = [
              { d: 'M18.9 10 L18.9 5.5 Q19.5 4.8 20.1 5.5 L20.1 10 Z', h: 0.4 } ],
     drops: [['r', 19.5, 32, 1], ['r', 19.5, 26, 0.5], ['y', 19.5, 13.5, 0.35], ['b', 19.5, 13.5, 0.22]] },
   { id: 'marble', name: T('노을 구슬', 'Sunset Marble'), profile: 'dome',
-    parts: [ { d: 'M19.5 11.5 A16 16 0 1 1 19.49 11.5 Z' } ],
-    drops: [['y', 19.5, 16, 1], ['r', 19.5, 24, 0.9], ['b', 13, 38, 0.7], ['b', 26, 38, 0.7]] },
+    parts: [ { d: 'M19.5 11.5 A16 16 0 1 1 19.49 11.5 Z' },
+             { paint: false, d: 'M2.33 30.07 L3.47 30.42 L4.63 30.73 L5.80 30.98 L6.98 31.14 L8.17 31.20 L9.36 31.14 L10.54 30.98 L11.71 30.73 L12.86 30.42 L14.01 30.07 L15.13 29.74 L16.24 29.44 L17.34 29.20 L18.42 29.05 L19.50 29.00 L20.58 29.05 L21.66 29.20 L22.76 29.44 L23.87 29.74 L24.99 30.07 L26.14 30.42 L27.29 30.73 L28.46 30.98 L29.64 31.14 L30.83 31.20 L32.02 31.14 L33.20 30.98 L34.37 30.73 L35.53 30.42 L36.67 30.07 L36.33 28.93 L35.20 29.26 L34.09 29.56 L33.00 29.80 L31.91 29.95 L30.83 30.00 L29.76 29.95 L28.67 29.80 L27.57 29.56 L26.46 29.26 L25.34 28.93 L24.20 28.58 L23.04 28.27 L21.87 28.02 L20.69 27.86 L19.50 27.80 L18.31 27.86 L17.13 28.02 L15.96 28.27 L14.80 28.58 L13.66 28.93 L12.54 29.26 L11.43 29.56 L10.33 29.80 L9.24 29.95 L8.17 30.00 L7.09 29.95 L6.00 29.80 L4.91 29.56 L3.80 29.26 L2.67 28.93 Z' } ],
+    drops: [['y', 19.5, 16, 1], ['r', 19.5, 23, 0.75], ['b', 12, 37, 0.85], ['b', 27, 37, 0.85]] },
   { id: 'umbrella', name: T('우산', 'Umbrella'), profile: 'dome', ribs: true,
     parts: [ { d: 'M3.5 27 C3.5 15 11 8.5 19.5 8.5 C28 8.5 35.5 15 35.5 27 Q31.5 24.6 27.5 27 Q23.5 24.6 19.5 27 Q15.5 24.6 11.5 27 Q7.5 24.6 3.5 27 Z' },
-             { d: 'M18.3 26 L20.7 26 L20.7 41 Q20.7 45.8 16.1 45.8 Q11.8 45.8 11.8 41.4 L11.8 39.4 L14.2 39.4 L14.2 41.4 Q14.2 43.4 16.1 43.4 Q18.3 43.4 18.3 41 Z', h: 0.6 } ],
-    drops: [['b', 12, 18, 1], ['r', 27, 18, 1], ['y', 19.5, 37, 0.45]] },
+             { d: 'M18.3 26 L20.7 26 L20.7 41 Q20.7 45.8 16.1 45.8 Q11.8 45.8 11.8 41.4 L11.8 39.4 L14.2 39.4 L14.2 41.4 Q14.2 43.4 16.1 43.4 Q18.3 43.4 18.3 41 Z', h: 0.6 },
+             { paint: false, d: 'M19.12 8.20 L18.11 9.16 L17.15 10.18 L16.25 11.27 L15.43 12.42 L14.68 13.63 L13.99 14.90 L13.37 16.23 L12.82 17.62 L12.34 19.07 L11.93 20.57 L11.58 22.13 L11.30 23.75 L11.09 25.43 L10.95 27.16 L12.05 27.24 L12.19 25.54 L12.39 23.91 L12.66 22.34 L12.99 20.83 L13.39 19.39 L13.85 18.00 L14.38 16.67 L14.97 15.40 L15.63 14.19 L16.34 13.04 L17.13 11.94 L17.98 10.91 L18.89 9.93 L19.88 9.00 Z' },
+             { paint: false, d: 'M18.95 8.60 L18.94 9.54 L18.94 10.54 L18.93 11.61 L18.93 12.73 L18.93 13.91 L18.93 15.15 L18.93 16.45 L18.93 17.81 L18.93 19.23 L18.93 20.70 L18.93 22.24 L18.94 23.83 L18.94 25.49 L18.95 27.20 L20.05 27.20 L20.04 25.48 L20.04 23.83 L20.03 22.24 L20.03 20.70 L20.03 19.22 L20.03 17.81 L20.03 16.45 L20.03 15.15 L20.03 13.91 L20.03 12.73 L20.03 11.61 L20.04 10.55 L20.04 9.55 L20.05 8.60 Z' },
+             { paint: false, d: 'M19.12 9.00 L20.10 9.93 L21.00 10.91 L21.84 11.94 L22.61 13.03 L23.33 14.19 L23.98 15.40 L24.57 16.67 L25.10 18.00 L25.56 19.39 L25.97 20.84 L26.31 22.35 L26.58 23.92 L26.80 25.55 L26.95 27.25 L28.05 27.15 L27.89 25.43 L27.67 23.75 L27.39 22.13 L27.03 20.57 L26.62 19.06 L26.13 17.62 L25.58 16.23 L24.96 14.90 L24.28 13.64 L23.53 12.43 L22.71 11.28 L21.83 10.19 L20.88 9.16 L19.88 8.20 Z' } ],
+    drops: [['r', 7.5, 21, 0.75], ['y', 15.5, 17, 0.8], ['b', 23.5, 17, 0.8], ['r', 31.5, 21, 0.5], ['b', 31.5, 21, 0.35], ['y', 19.5, 37, 0.45]] },
   { id: 'carrot', name: T('당근', 'Carrot'), profile: 'dome',
     parts: [ { d: 'M12 19 C12 16.5 27 16.5 27 19 C27 27 22 42 19.5 50 C17 42 12 27 12 19 Z' },
              { d: 'M18.4 18 C16 13 12 10 11 5 C14 7 17.5 11 19.5 16 C20.5 10 21 6 22.5 3 C23 8 22 12 21 17 C23.5 13 27 10.5 30 10 C27.5 13 24 15.5 21.5 18.5 Z', h: 0.45 } ],
@@ -329,8 +333,10 @@ const LEVELS = [
   { id: 'fish', name: T('물고기', 'Fish'), profile: 'dome',
     parts: [ { d: 'M5 27 C9 18.5 20 17.5 27 25 L34.5 18.5 C33.5 24 33.5 30 34.5 35.5 L27 29 C20 36.5 9 35.5 5 27 Z' },
              { d: 'M14 20.5 C16 15 21 13.5 24 14.5 C22 16 20.5 18.5 20 21 Z', h: 0.4 },
-             { d: 'M15 33.5 C16 37 18.5 39 21 39.5 C20 37.5 19.5 35.5 19.6 33.2 Z', h: 0.4 } ],
-    drops: [['y', 11, 27, 0.8], ['r', 18, 27, 0.8], ['b', 33.5, 27, 0.15], ['b', 20, 16.5, 0.15], ['b', 18.5, 36.5, 0.1]] },
+             { d: 'M15 33.5 C16 37 18.5 39 21 39.5 C20 37.5 19.5 35.5 19.6 33.2 Z', h: 0.4 },
+             { paint: false, d: 'M12.46 16.92 L12.26 18.36 L12.09 19.80 L11.95 21.24 L11.84 22.68 L11.76 24.12 L11.72 25.56 L11.70 27.00 L11.72 28.44 L11.76 29.88 L11.84 31.32 L11.95 32.76 L12.09 34.20 L12.26 35.64 L12.46 37.08 L13.54 36.92 L13.35 35.50 L13.18 34.08 L13.04 32.67 L12.94 31.25 L12.86 29.83 L12.82 28.42 L12.80 27.00 L12.82 25.58 L12.86 24.17 L12.94 22.75 L13.04 21.33 L13.18 19.92 L13.35 18.50 L13.54 17.08 Z' },
+             { paint: false, d: 'M18.96 16.92 L18.76 18.36 L18.59 19.80 L18.45 21.24 L18.34 22.68 L18.26 24.12 L18.22 25.56 L18.20 27.00 L18.22 28.44 L18.26 29.88 L18.34 31.32 L18.45 32.76 L18.59 34.20 L18.76 35.64 L18.96 37.08 L20.04 36.92 L19.85 35.50 L19.68 34.08 L19.54 32.67 L19.44 31.25 L19.36 29.83 L19.32 28.42 L19.30 27.00 L19.32 25.58 L19.36 24.17 L19.44 22.75 L19.54 21.33 L19.68 19.92 L19.85 18.50 L20.04 17.08 Z' } ],
+    drops: [['y', 8.5, 27, 0.6], ['r', 16, 27, 0.35], ['y', 16, 27, 0.25], ['y', 23, 27, 0.6], ['b', 33.5, 27, 0.15], ['b', 20, 16.5, 0.15], ['b', 18.5, 36.5, 0.1]] },
   { id: 'flower', name: T('화분 꽃', 'Potted Flower'), profile: 'dome',
     parts: [ { d: 'M19.5 6 C23 6 23.5 9.5 22.5 11.5 C25 9.5 28.5 10.5 28.5 14 C28.5 17 25.5 17.5 24 17.5 C26 19 26 23 22.5 23.5 C21 23.8 20 22.8 19.5 21.5 C19 22.8 18 23.8 16.5 23.5 C13 23 13 19 15 17.5 C13.5 17.5 10.5 17 10.5 14 C10.5 10.5 14 9.5 16.5 11.5 C15.5 9.5 16 6 19.5 6 Z' },
              { d: 'M18.8 21 L20.2 21 L20.2 38 L18.8 38 Z', h: 0.4 },
@@ -372,8 +378,10 @@ const LEVELS = [
     drops: [["r", 9, 22, 0.8], ["r", 27, 15, 0.9], ["y", 19.5, 43, 0.12]] },
   { id: 'mug', name: T('머그컵', 'Mug'), profile: 'dome',
     parts: [ { d: 'M8 18 L30 18 L29 44 C29 47 27 48 24 48 L14 48 C11 48 9 47 9 44 Z' },
-             { d: 'M29 23 C38 23 38.5 38 29 39.5 L29 35.5 C34 34.5 34 27.5 29 27 Z', h: 0.6 } ],
-    drops: [["b", 14, 26, 1], ["b", 24, 39, 1], ["b", 20, 31, 0.6], ["r", 34, 31, 0.12]] },
+             { d: 'M29 23 C38 23 38.5 38 29 39.5 L29 35.5 C34 34.5 34 27.5 29 27 Z', h: 0.6 },
+             { paint: false, d: 'M7.00 26.00 L29.60 26.00 L29.60 25.00 L7.00 25.00 Z' },
+             { paint: false, d: 'M7.00 31.50 L29.50 31.50 L29.50 30.50 L7.00 30.50 Z' } ],
+    drops: [['b', 19.5, 21, 0.55], ['y', 19.5, 28.2, 0.4], ['b', 14, 39, 0.9], ['b', 25, 39, 0.6], ['r', 34, 31, 0.12]] },
   { id: 'cat', name: T('고양이', 'Cat'), profile: 'dome',
     parts: [ { d: 'M4.50 30.00 A15 12.5 0 1 1 34.50 30.00 A15 12.5 0 1 1 4.50 30.00 Z' },
              { d: 'M6 25 L7.5 9 L16.5 19 Z', h: 0.7 },
@@ -421,8 +429,10 @@ const LEVELS = [
     parts: [ { d: 'M19.5 5 C29 5 35 11 35 20 C35 28 27 34 23 38 L16 38 C12 34 4 28 4 20 C4 11 10 5 19.5 5 Z' },
              { d: 'M15 43 L24 43 L23 50 L16 50 Z', h: 0.6 },
              { paint: false, d: 'M15.90 37.50 L16.90 37.50 L16.20 43.20 L15.20 43.20 Z' },
-             { paint: false, d: 'M22.10 37.50 L23.10 37.50 L23.80 43.20 L22.80 43.20 Z' } ],
-    drops: [["r", 9, 18, 0.8], ["y", 19.5, 15, 0.8], ["b", 30, 18, 0.8], ["r", 19.5, 31, 0.3], ["y", 19.5, 46, 0.3], ["r", 19.5, 47, 0.05], ["b", 19.5, 47.5, 0.03]] },
+             { paint: false, d: 'M22.10 37.50 L23.10 37.50 L23.80 43.20 L22.80 43.20 Z' },
+             { paint: false, d: 'M19.03 4.91 L17.62 7.19 L16.40 9.50 L15.37 11.82 L14.53 14.16 L13.90 16.52 L13.46 18.89 L13.23 21.27 L13.19 23.66 L13.35 26.07 L13.70 28.49 L14.26 30.91 L15.01 33.35 L15.96 35.79 L17.10 38.23 L18.10 37.77 L16.97 35.36 L16.05 32.99 L15.32 30.63 L14.79 28.28 L14.44 25.95 L14.29 23.64 L14.32 21.33 L14.55 19.04 L14.97 16.76 L15.58 14.49 L16.39 12.23 L17.38 9.98 L18.57 7.74 L19.97 5.49 Z' },
+             { paint: false, d: 'M19.03 5.49 L20.43 7.74 L21.62 9.98 L22.61 12.23 L23.42 14.49 L24.03 16.76 L24.45 19.04 L24.68 21.33 L24.71 23.64 L24.56 25.95 L24.21 28.28 L23.68 30.63 L22.95 32.99 L22.03 35.36 L20.90 37.77 L21.90 38.23 L23.04 35.79 L23.99 33.35 L24.74 30.91 L25.30 28.49 L25.65 26.07 L25.81 23.66 L25.77 21.27 L25.54 18.89 L25.10 16.52 L24.47 14.16 L23.63 11.82 L22.60 9.50 L21.38 7.19 L19.97 4.91 Z' } ],
+    drops: [['r', 9, 20, 1], ['y', 19.5, 19, 0.9], ['b', 30, 20, 1], ['y', 19.5, 46, 0.3], ['r', 19.5, 47, 0.05], ['b', 19.5, 47.5, 0.03]] },
   { id: 'planet', name: T('고리 행성', 'Ringed Planet'), profile: 'dome',
     parts: [ { d: 'M7.50 27.00 A12 12 0 1 1 31.50 27.00 A12 12 0 1 1 7.50 27.00 Z' },
              { d: 'M37.54 21.02 L37.61 21.76 L37.37 22.58 L36.82 23.48 L35.98 24.43 L34.86 25.44 L33.48 26.47 L31.85 27.50 L30.02 28.53 L28.00 29.54 L25.84 30.50 L23.57 31.40 L21.23 32.22 L18.86 32.96 L16.50 33.59 L14.20 34.11 L11.98 34.51 L9.89 34.78 L7.97 34.92 L6.24 34.92 L4.75 34.79 L3.50 34.52 L2.53 34.12 L1.84 33.61 L1.46 32.98 L1.39 32.24 L1.63 31.42 L2.18 30.52 L3.02 29.57 L4.14 28.56 L5.52 27.53 L7.15 26.50 L8.98 25.47 L11.00 24.46 L13.16 23.50 L15.43 22.60 L17.77 21.78 L20.14 21.04 L22.50 20.41 L24.80 19.89 L27.02 19.49 L29.11 19.22 L31.03 19.08 L32.76 19.08 L34.25 19.21 L35.50 19.48 L36.47 19.88 L37.16 20.39 Z M32.08 22.42 L31.63 22.16 L30.98 21.99 L30.13 21.90 L29.09 21.90 L27.89 21.98 L26.55 22.16 L25.09 22.41 L23.53 22.74 L21.91 23.15 L20.24 23.62 L18.56 24.15 L16.89 24.73 L15.27 25.35 L13.72 25.99 L12.28 26.66 L10.95 27.33 L9.77 27.99 L8.76 28.64 L7.93 29.25 L7.30 29.83 L6.88 30.36 L6.67 30.84 L6.69 31.25 L6.92 31.58 L7.37 31.84 L8.02 32.01 L8.87 32.10 L9.91 32.10 L11.11 32.02 L12.45 31.84 L13.91 31.59 L15.47 31.26 L17.09 30.85 L18.76 30.38 L20.44 29.85 L22.11 29.27 L23.73 28.65 L25.28 28.01 L26.72 27.34 L28.05 26.67 L29.23 26.01 L30.24 25.36 L31.07 24.75 L31.70 24.17 L32.12 23.64 L32.33 23.16 L32.31 22.75 Z', h: 0.5 } ],
@@ -465,10 +475,18 @@ function prepLevel(lv) {
   const sc = shape.getContext('2d'); sc.scale(RS, RS); sc.fillStyle = '#000';
   const paths = lv.parts.map(p => new Path2D(p.d));
   const mk = document.createElement('canvas'); mk.width = W; mk.height = H; const mx = mk.getContext('2d'); mx.scale(RS, RS);
-  lv.parts.forEach((p, i) => { sc.fill(paths[i]); if (p.paint !== false) mx.fill(paths[i]); });
-  // grid mask: cell coverage from the smooth shape
-  const sd = mx.getImageData(0, 0, W, H).data, mask = new Uint8Array(N);
-  for (let c = 0; c < N; c++) { const x0 = (c % GW) * RS, y0 = ((c / GW) | 0) * RS; let s = 0; for (let j = 1; j < RS; j += 3) for (let i = 1; i < RS; i += 3) s += sd[((y0 + j) * W + x0 + i) * 4 + 3]; mask[c] = s / (16 * 255) > 0.3 ? 1 : 0; }
+  lv.parts.forEach((p, i) => sc.fill(paths[i]));
+  // which part owns each grid cell (later parts sit on top); unpaintable parts (spots, windows, seams) are cut out
+  const cover = path => { mx.setTransform(1, 0, 0, 1, 0, 0); mx.clearRect(0, 0, W, H); mx.setTransform(RS, 0, 0, RS, 0, 0); mx.fill(path); const d = mx.getImageData(0, 0, W, H).data, out = new Float32Array(N);
+    for (let c = 0; c < N; c++) { const x0 = (c % GW) * RS, y0 = ((c / GW) | 0) * RS; let s = 0; for (let j = 1; j < RS; j += 3) for (let i = 1; i < RS; i += 3) s += d[((y0 + j) * W + x0 + i) * 4 + 3]; out[c] = s / (16 * 255); } return out; };
+  const owner = new Int8Array(N).fill(-1), blocked = new Uint8Array(N);
+  lv.parts.forEach((p, i) => { const cv2 = cover(paths[i]); for (let c = 0; c < N; c++) { if (p.paint === false) { if (cv2[c] > 0.45) blocked[c] = 1; } else if (cv2[c] > 0.3) owner[c] = i; } });
+  const mask = new Uint8Array(N); for (let c = 0; c < N; c++) mask[c] = owner[c] >= 0 && !blocked[c] ? 1 : 0;
+  // a thin unpainted groove where two parts meet, so each part is its own area to colour
+  const seams = [];
+  if (lv.seams !== false) for (let c = 0; c < N; c++) { if (!mask[c]) continue; const x = c % GW;
+    for (const n of [x > 0 ? c - 1 : -1, x < GW - 1 ? c + 1 : -1, c - GW, c + GW]) if (n >= 0 && n < N && mask[n] && owner[n] !== owner[c] && owner[c] > owner[n]) { seams.push(c); break; } }
+  for (const c of seams) mask[c] = 0;
   // height field: per part, distance from its edge, shaped by the profile
   const hw = W / 2 | 0, hh = H / 2 | 0, height = new Float32Array(hw * hh), inside = new Uint8Array(hw * hh);
   lv.parts.forEach((p, pi) => {
@@ -515,7 +533,7 @@ function prepLevel(lv) {
       s1.fillStyle = 'rgba(90,80,60,.35)'; s1.beginPath(); s1.ellipse(x, y, 0.3, 0.45, -0.3, 0, 7); s1.fill(); s2.fillStyle = 'rgba(255,255,255,.7)'; s2.beginPath(); s2.ellipse(x - 0.18, y - 0.25, 0.16, 0.2, 0, 0, 7); s2.fill(); }
     s1.restore(); s2.restore(); }
   if (lv.ribs) { s1.save(); s1.scale(RS / 2, RS / 2); s1.strokeStyle = 'rgba(80,70,60,.35)'; s1.lineWidth = 0.35; for (const x of [11.5, 19.5, 27.5]) { s1.beginPath(); s1.moveTo(19.5, 8.8); s1.quadraticCurveTo(x * 0.9 + 1.9, 15, x, 26.6); s1.stroke(); } s1.restore(); }
-  return (lv.prep = { mask, paths, shape, shade, gloss });
+  return (lv.prep = { mask, paths, shape, shade, gloss, owner, seams });
 }
 
 // ---------------- drawing ----------------
@@ -563,6 +581,9 @@ function renderObject(target, canvas, lv, w, h, withShadow) {
   ox.imageSmoothingEnabled = true; ox.imageSmoothingQuality = 'high';
   ox.drawImage(small, 0, 0, w, h);
   lv.parts.forEach((pt, i) => { if (pt.paint === false) { ox.save(); ox.scale(w / GW, h / GH); ox.fillStyle = `rgb(${PAPER})`; ox.fill(p.paths[i]); ox.restore(); } });
+  if (p.seams.length) { // soft paper-coloured groove: one pixel per cell, scaled up smoothly
+    if (!p.seamImg) { const c2 = document.createElement('canvas'); c2.width = GW * 2; c2.height = GH * 2; const g2 = c2.getContext('2d'); g2.fillStyle = `rgb(${PAPER})`; for (const c of p.seams) g2.fillRect((c % GW) * 2 + 0.3, ((c / GW) | 0) * 2 + 0.3, 1.4, 1.4); p.seamImg = c2; }
+    ox.save(); ox.imageSmoothingEnabled = true; ox.imageSmoothingQuality = 'high'; ox.globalAlpha = 0.95; ox.drawImage(p.seamImg, 0, 0, w, h); ox.drawImage(p.seamImg, 0, 0, w, h); ox.restore(); }
   ox.globalCompositeOperation = 'multiply'; ox.drawImage(p.shade, 0, 0, w, h);
   ox.globalCompositeOperation = 'source-over'; ox.drawImage(p.gloss, 0, 0, w, h);
   ox.globalCompositeOperation = 'destination-in'; ox.drawImage(p.shape, 0, 0, w, h);
@@ -575,7 +596,32 @@ function renderObject(target, canvas, lv, w, h, withShadow) {
 let log = [], L = 0, lv, cur, target, hist = [], used = 0, maxDrops, paint = 'r', busy = false, peek = false, aim = null, freeMode = false;
 const paintCss = () => typeof paint === 'string' ? PAINTS.find(p => p.k === paint).css : paint.css;
 const paintSpec = () => typeof paint === 'string' ? paint : [...paint.pig.map(v => Math.round(v * 1000) / 1000), Math.round(paint.conc * 1000) / 1000];
-function makeTarget(lv) { const p = prepLevel(lv), t = new Canvas(p.mask); for (const d of lv.drops) { t.drop(d[0], d[1], d[2], d[3], 0); t.settle(); } return t; }
+function makeTarget(lv) {
+  const p = prepLevel(lv), t = new Canvas(p.mask); for (const d of lv.drops) { t.drop(d[0], d[1], d[2], d[3], 0); t.settle(); }
+  if (!lv.filled) { lv.filled = true; autofill(lv, t, p); }
+  return t;
+}
+function autofill(lv, t, p) {
+  const tot = c => t.P[0][c] + t.P[1][c] + t.P[2][c];
+  for (let round = 0; round < 16; round++) {
+    const bare = new Uint8Array(N); for (let c = 0; c < N; c++) bare[c] = p.mask[c] && tot(c) < 0.06 ? 1 : 0;
+    const seen = new Uint8Array(N); let best = null;
+    for (let c0 = 0; c0 < N; c0++) { if (!bare[c0] || seen[c0]) continue; const comp = [c0]; seen[c0] = 1;
+      for (let k = 0; k < comp.length; k++) { const c = comp[k], x = c % GW; for (const n of [x > 0 ? c - 1 : -1, x < GW - 1 ? c + 1 : -1, c - GW, c + GW]) if (n >= 0 && n < N && bare[n] && !seen[n]) { seen[n] = 1; comp.push(n); } }
+      if (!best || comp.length > best.length) best = comp; }
+    if (!best || best.length < 8) break;
+    let sx = 0, sy = 0; for (const c of best) { sx += c % GW; sy += (c / GW) | 0; } sx /= best.length; sy /= best.length;
+    let at = best[0], bd = 1e9; for (const c of best) { const d = (c % GW - sx) ** 2 + (((c / GW) | 0) - sy) ** 2; if (d < bd) { bd = d; at = c; } }
+    // colour: what this part already has, else the nearest painted colour, else the level's fill hint
+    const o = p.owner[at], v = [0, 0, 0];
+    { let near = -1, nd = 1e9; for (let c = 0; c < N; c++) if (p.mask[c] && p.owner[c] === o && tot(c) > 0.12) { const d = (c % GW - at % GW) ** 2 + (((c / GW) | 0) - ((at / GW) | 0)) ** 2; if (d < nd) { nd = d; near = c; } } if (near >= 0) for (let k = 0; k < 3; k++) v[k] += t.P[k][near]; }
+    if (v[0] + v[1] + v[2] < 0.05) { const want = (lv.fill || {})[o]; if (want) { for (const ch of want) v['ryb'.indexOf(ch)] += 1; }
+      else { let near = -1, nd = 1e9; for (let c = 0; c < N; c++) if (p.mask[c] && tot(c) > 0.1) { const d = (c % GW - at % GW) ** 2 + (((c / GW) | 0) - ((at / GW) | 0)) ** 2; if (d < nd) { nd = d; near = c; } } if (near >= 0) for (let k = 0; k < 3; k++) v[k] += t.P[k][near]; else v[1] = 1; } }
+    const sum = v[0] + v[1] + v[2], vol = Math.max(0, Math.min(1, best.length / 110));
+    const x = at % GW + 0.5, y = ((at / GW) | 0) + 0.5;
+    [0, 1, 2].filter(k => v[k] / sum >= 0.22).forEach(k => { const d = ['ryb'[k], Math.round(x * 10) / 10, Math.round(y * 10) / 10, Math.round(Math.min(1, vol * (v[k] / sum) * 1.4) * 25) / 25]; lv.drops.push(d); t.drop(d[0], d[1], d[2], d[3], 0); t.settle(); });
+  }
+}
 function setMode(free) {
   freeMode = free;
   document.querySelector('.meter').style.display = free ? 'none' : '';
