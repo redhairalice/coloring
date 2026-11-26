@@ -8,6 +8,16 @@
 
 폰 브라우저에서 열고 "홈 화면에 추가"를 누르면 앱처럼 쓸 수 있어요. 진행 상황은 각자의 기기에 저장돼요.
 
+## English
+
+**A Drop of Paint** is a colour puzzle: drop paint that spreads and mixes to colour each picture like the goal.
+
+- Puzzle: match the goal 80% or more to unlock the next picture.
+- Free painting: paint whatever you like and keep it as a work.
+- Colour collection: collect 330 colours that appear while you paint.
+
+The game switches to English automatically on English devices, and you can change the language in the "?" help screen.
+
 ## 이용 안내
 
 - 링크를 공유하고 게임을 플레이하는 건 누구나 자유롭게 할 수 있어요.
