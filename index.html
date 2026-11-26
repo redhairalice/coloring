@@ -37,6 +37,13 @@ header .sp { flex: 1; }
 #dropsLeft i { width: 9px; height: 12px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: #b9aea0; display: block; }
 #dropsLeft i.used { opacity: .25; }
 #peek { flex: none; }
+.qhelp { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--muted); background: none; color: var(--muted); font-weight: 800; font-size: 13px; padding: 0; line-height: 1; }
+.sheet.help { text-align: left; }
+.sheet.help h3 { font-size: 14px; margin: 14px 0 4px; }
+.sheet.help ol, .sheet.help ul { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.55; color: var(--ink); }
+.sheet.help li { margin: 3px 0; }
+.dropsTxt { font-size: 11.5px; color: var(--muted); margin-left: 4px; align-self: center; }
+.dropsTxt.out { color: var(--accent); font-weight: 700; }
 #palette.fpal { width: 100%; }
 .side { display: flex; flex-direction: column; gap: 6px; flex: none; }
 #probeBtn[aria-pressed=true] { background: var(--ink); color: #fff; border-color: var(--ink); }
@@ -132,7 +139,7 @@ header .sp { flex: 1; }
 </head>
 <body>
 <div id="app">
-  <header><h1>물감 한 방울</h1><span class="sp"></span><button class="ibtn" id="btnLevels">그림</button><button class="ibtn" id="btnFree">자유</button><button class="ibtn" id="btnGal">작품</button><button class="ibtn" id="btnDex">도감</button></header>
+  <header><h1>물감 한 방울</h1><button class="qhelp" id="btnHelp" aria-label="하는 법">?</button><span class="sp"></span><button class="ibtn" id="btnLevels">그림</button><button class="ibtn" id="btnFree">자유</button><button class="ibtn" id="btnGal">작품</button><button class="ibtn" id="btnDex">도감</button></header>
   <div class="info">
     <canvas id="thumb" width="112" height="152"></canvas>
     <div class="txt">
@@ -160,6 +167,30 @@ header .sp { flex: 1; }
   <div class="fpal" id="fpal"></div>
 </div>
 <div class="modal" id="mSketch" hidden><div class="sheet"><h2>밑그림 고르기</h2><p>퍼즐에서 발견한 색은 팔레트에 섞인 물감으로 들어와요.</p><div class="levels" id="sketchGrid"></div><div class="row"><button data-close>닫기</button></div></div></div>
+<div class="modal" id="mHelp" hidden><div class="sheet help">
+  <h2>하는 법</h2>
+  <h3>퍼즐</h3>
+  <ol>
+    <li>위쪽 작은 그림이 <b>목표</b>예요. 똑같이 칠하는 게 목표예요.</li>
+    <li>아래 팔레트에서 물감을 고르고, 그림을 <b>누르고 있으면</b> 물감이 퍼질 자리가 미리 보여요. <b>오래 누를수록 양이 많아져요.</b> 손을 떼면 떨어져요.</li>
+    <li>물감끼리 만나면 섞여요. 빨강+노랑=주황, 노랑+파랑=초록, 빨강+파랑=보라.</li>
+    <li><b>물감 방울 수가 정해져 있어요.</b> 위쪽 작은 방울 그림이 남은 개수예요. 다 쓰면 더 떨어뜨릴 수 없으니 계획해서 쓰세요.</li>
+    <li>다 칠했으면 <b>완성!</b>을 누르세요. 목표와 80% 이상 비슷하면 다음 그림이 열려요. 90%면 별 2개, 96%면 별 3개.</li>
+  </ol>
+  <h3>도와주는 버튼</h3>
+  <ul>
+    <li><b>목표 겹쳐 보기</b>: 누르고 있는 동안 목표 그림을 크게 보여 줘요.</li>
+    <li><b>색 확인</b>: 켜고 그림의 한 곳을 누르면, 그 자리의 목표 색과 내 색이 빨강·노랑·파랑 몇 대 몇인지 비교해 보여 줘요. 다른 곳을 누르면 닫혀요.</li>
+    <li><b>되돌리기</b>는 마지막 한 방울을 취소해요. 방울도 돌려받아요.</li>
+  </ul>
+  <h3>더 즐기기</h3>
+  <ul>
+    <li><b>자유</b>: 목표 없이 마음대로 칠해요. 물감 제한이 없고, 찾은 색도 쓸 수 있어요.</li>
+    <li><b>도감</b>: 칠하다 나온 색이 330가지 색 도감에 모여요. 옅게 퍼진 곳, 섞인 곳에서 새 색이 나와요.</li>
+    <li><b>작품</b>: 완성한 그림이 모이고, 이미지로 공유할 수 있어요.</li>
+  </ul>
+  <div class="row"><button class="primary" data-close>시작하기</button></div>
+</div></div>
 <div class="modal" id="mResult" hidden><div class="sheet" id="resultBody"></div></div>
 <div class="modal" id="mDex" hidden><div class="sheet"><h2>색 도감</h2><p id="dexCount"></p><div class="dex" id="dexGrid"></div><div class="row"><button data-close>닫기</button></div></div></div>
 <div class="modal" id="mGal" hidden><div class="sheet"><h2>내 작품</h2><p id="galCount"></p><div class="levels" id="galGrid"></div><div class="row"><button data-close>닫기</button></div></div></div>
@@ -492,7 +523,7 @@ function updateInfo() {
   if (freeMode) { document.getElementById('btnUndo').disabled = !hist.length || busy; document.getElementById('btnDone').disabled = busy || !used; return 0; }
   const s = similarity(cur, target);
   document.getElementById('sim').textContent = Math.round(s * 100) + '%';
-  document.getElementById('dropsLeft').innerHTML = Array.from({ length: maxDrops }, (_, i) => `<i class="${i < used ? 'used' : ''}"></i>`).join('');
+  const left = maxDrops - used; document.getElementById('dropsLeft').innerHTML = Array.from({ length: maxDrops }, (_, i) => `<i class="${i < used ? 'used' : ''}"></i>`).join('') + `<span class="dropsTxt ${left ? '' : 'out'}">${left ? `물감 ${left}방울 남음` : '물감을 다 썼어요'}</span>`;
   document.getElementById('btnUndo').disabled = !hist.length || busy;
   document.getElementById('btnDone').disabled = busy || !used;
   return s;
@@ -555,9 +586,15 @@ function showProbe() {
   el.style.left = Math.max(4, Math.min(wr.width - w - 4, px - w / 2)) + 'px';
   el.style.top = (py - h - 22 > 0 ? py - h - 22 : py + 22) + 'px';
 }
+document.addEventListener('pointerdown', e => {
+  if (!probe) return;
+  if (e.target.closest('#probe') || e.target.closest('#probeBtn') || (probing && e.target === cv)) return;
+  probe = null; probing = false; document.getElementById('probeBtn').setAttribute('aria-pressed', false); showProbe(); draw();
+}, true);
 document.getElementById('probeBtn').onclick = e => { probing = !probing; e.currentTarget.setAttribute('aria-pressed', probing); if (!probing) probe = null; showProbe(); draw(); document.getElementById('hint').textContent = probing ? '그림의 한 곳을 누르면 목표와 내 그림의 물감 비율을 비교해요' : '팔레트에서 물감을 고르고 그림을 누르세요'; document.getElementById('hint').style.opacity = 1; };
 cv.addEventListener('pointerdown', e => {
   if (probing) { const g = gridPos(e); probe = { x: g.x, y: g.y }; document.getElementById('hint').style.opacity = 0; showProbe(); draw(); return; }
+  if (!freeMode && used >= maxDrops && !busy) { const h = document.getElementById('hint'); h.textContent = '물감을 다 썼어요 · 완성!을 누르거나 되돌리기로 한 방울 돌려받으세요'; h.style.opacity = 1; return; }
   if (busy || used >= maxDrops || (peek && !freeMode)) return;
   const g = gridPos(e); cv.setPointerCapture(e.pointerId);
   press = { x: g.x, y: g.y, t0: performance.now(), sy: e.clientY, cy: e.clientY };
@@ -704,6 +741,8 @@ document.getElementById('btnGal').onclick = () => {
   const next = () => { if (k >= btns.length || document.getElementById('mGal').hidden) return; const b = btns[k++], w = G[+b.dataset.i]; if (w.free) { const sk = SKETCHES.find(x => x.id === w.free); if (sk) drawPage(b.querySelector('canvas').getContext('2d'), Paper.decode(w.g), sk, 120, 160); } else { const r = replay(w); if (r) renderObject(b.querySelector('canvas'), r.c, r.l, 120, 162, false); } b.onclick = () => openWork(w); setTimeout(next, 0); };
   next();
 };
+document.getElementById('btnHelp').onclick = () => document.getElementById('mHelp').hidden = false;
+if (!save.seenHelp) { save.seenHelp = 1; persist(); setTimeout(() => document.getElementById('mHelp').hidden = false, 300); }
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => b.closest('.modal').hidden = true);
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.hidden = true; }));
 
