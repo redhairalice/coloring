@@ -8,6 +8,18 @@
 
 폰 브라우저에서 열고 "홈 화면에 추가"를 누르면 앱처럼 쓸 수 있어요. 진행 상황은 각자의 기기에 저장돼요.
 
+## 이용 안내
+
+- 링크를 공유하고 게임을 플레이하는 건 누구나 자유롭게 할 수 있어요.
+- 이 저장소의 코드, 그림, 문구, 게임 내용을 복제하거나 수정해서 다른 곳에 배포하거나, 자기 작품으로 쓰는 것은 허락하지 않아요.
+- 라이선스를 따로 붙이지 않았으므로 저작권법상 모든 권리는 저작자에게 있어요.
+
+Feel free to share the link and play. Copying, modifying or redistributing the code, graphics, text or game content is not permitted. No license is granted; all rights reserved.
+
+## 출처
+
+색 이름 일부는 [color-name-list](https://github.com/meodai/color-name-list) (MIT License, © 2017 David Aerne)에서 가져왔어요. 라이선스 전문은 [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md)에 있어요.
+
 ---
 
 © 2026 빨간머리앨. All rights reserved.
