@@ -65,21 +65,14 @@ html[lang=en] #app .ibtn { padding: 6px 7px; font-size: 12.5px; }
 .stagewrap { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
 #cv { width: 100%; aspect-ratio: 40 / 54; max-height: 100%; touch-action: none; border-radius: 22px; display: block; }
 #hint { position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; font-size: 12px; color: var(--muted); pointer-events: none; transition: opacity .4s; }
-.palette { display: flex; align-items: flex-end; gap: 10px; justify-content: center; width: fit-content; margin: 0 auto; padding: 12px 16px 8px; border-radius: 28px 28px 34px 34px;
-  background: linear-gradient(180deg, #fefdfb, #f1ede6); box-shadow: 0 6px 16px rgba(80,60,40,.14), inset 0 1px 0 #fff, inset 0 -3px 6px rgba(120,100,80,.08); }
-.paint { width: 66px; height: 70px; border: 0; padding: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.paint .well { width: 62px; height: 48px; border-radius: 14px; background: #f3efe8; box-shadow: inset 0 3px 5px rgba(90,70,50,.22), inset 0 -1px 0 rgba(255,255,255,.9), 0 1px 0 rgba(255,255,255,.9); position: relative; transition: transform .15s; }
-.paint .cake { position: absolute; inset: 6px; border-radius: 10px; background:
-  radial-gradient(ellipse 55% 40% at 30% 35%, rgba(255,255,255,.16), transparent 70%),
-  radial-gradient(ellipse 60% 45% at 70% 75%, rgba(0,0,0,.16), transparent 70%),
-  radial-gradient(ellipse 22% 14% at 58% 40%, rgba(0,0,0,.08), transparent 70%), var(--c);
-  box-shadow: inset 0 0 0 1.5px rgba(0,0,0,.12), inset 0 -2px 4px rgba(0,0,0,.12); filter: saturate(.92); }
+.palette { display: flex; align-items: flex-end; gap: 6px; justify-content: center; width: fit-content; margin: 0 auto; padding: 8px 14px 6px; border-radius: 6px;
+  background-color: #fbf8f2; box-shadow: 0 3px 10px rgba(80,60,40,.14); }
+.paint { width: 66px; height: 74px; border: 0; padding: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 0; }
+.paint .blob { width: 60px; height: 56px; display: block; transition: transform .15s; overflow: visible; }
 .paint span { font-size: 11px; color: var(--muted); }
-.paint[aria-pressed=true] .well { transform: translateY(-3px); box-shadow: inset 0 3px 5px rgba(90,70,50,.22), 0 0 0 2px var(--ink), 0 4px 8px rgba(60,40,20,.18); }
-.paint[aria-pressed=true] .cake { background:
-  radial-gradient(ellipse 45% 30% at 32% 32%, rgba(255,255,255,.38), transparent 70%),
-  radial-gradient(ellipse 60% 45% at 70% 75%, rgba(0,0,0,.12), transparent 70%), var(--c); filter: saturate(1.05); }
+.paint[aria-pressed=true] .blob { transform: scale(1.12); filter: drop-shadow(0 2px 3px rgba(60,40,20,.18)); }
 .paint[aria-pressed=true] span { color: var(--ink); font-weight: 700; }
+.paint[aria-pressed=true] span::after { content: ''; display: block; height: 2px; margin: 1px 6px 0; border-radius: 2px; background: currentColor; }
 .actions { display: flex; gap: 8px; margin-top: 12px; }
 .actions button { flex: 1; border: 1px solid var(--line); background: var(--card); border-radius: 14px; padding: 11px 6px; font-size: 14px; font-weight: 600; color: var(--ink); }
 .actions button.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
@@ -135,11 +128,10 @@ html[lang=en] #app .ibtn { padding: 6px 7px; font-size: 12.5px; }
 .brushes button i { display: block; border-radius: 50%; background: #6b625a; }
 .brushes button i.w { background: radial-gradient(circle at 35% 35%, #fff, #b9d4e6); box-shadow: inset 0 0 0 1px #9dbdd3; }
 .brushes button[aria-pressed=true] { border-color: var(--ink); color: var(--ink); background: #fff; }
-.fpal { display: flex; gap: 8px; overflow-x: auto; padding: 10px 12px 6px; border-radius: 22px; background: linear-gradient(180deg, #fefdfb, #f1ede6); box-shadow: 0 4px 12px rgba(80,60,40,.12), inset 0 1px 0 #fff; scrollbar-width: none; }
+.fpal { display: flex; gap: 2px; overflow-x: auto; padding: 8px 10px 4px; border-radius: 6px; background-color: #fbf8f2; background: linear-gradient(180deg, #fefdfb, #f1ede6); box-shadow: 0 4px 12px rgba(80,60,40,.12), inset 0 1px 0 #fff; scrollbar-width: none; }
 .fpal::-webkit-scrollbar { display: none; }
 .fpal .paint { width: 52px; height: 58px; flex: none; }
-.fpal .paint .well { width: 48px; height: 38px; border-radius: 11px; }
-.fpal .paint .cake { inset: 5px; border-radius: 8px; }
+.fpal .paint .blob { width: 50px; height: 46px; }
 .fpal .paint span { font-size: 10px; white-space: nowrap; max-width: 58px; overflow: hidden; text-overflow: ellipsis; }
 .fpal .paint { width: 58px; }
 </style>
@@ -551,7 +543,17 @@ function updateInfo() {
 
 // ---------------- input: press = amount, slide up = height ----------------
 const pal = document.getElementById('palette');
-let palItems = [];
+let palItems = [], blobN = 0;
+function shade(hex, k) { const n = parseInt(hex.slice(1), 16); return `rgb(${[16, 8, 0].map(sh => Math.round(((n >> sh) & 255) * k)).join(',')})`; }
+function blobSVG(css, seed) {
+  const id = 'wb' + (blobN++), dark = css[0] === '#' ? shade(css, 0.72) : css, r = 19 + (seed % 3);
+  let dots = ''; for (let i = 0; i < 3; i++) { const a = (seed * 2.3 + i * 2.1) % 6.283, d = 24 + ((seed + i * 5) % 6); dots += `<circle cx="${30 + Math.cos(a) * d}" cy="${28 + Math.sin(a) * d * 0.85}" r="${1 + ((seed + i) % 3) * 0.6}" fill="${css}" opacity=".7"/>`; }
+  return `<svg class="blob" viewBox="0 0 60 56" aria-hidden="true"><defs>
+    <filter id="${id}f" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="${seed % 97}"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter>
+    <radialGradient id="${id}g" cx="44%" cy="40%" r="60%"><stop offset="0" stop-color="${css}" stop-opacity=".55"/><stop offset=".7" stop-color="${css}" stop-opacity=".82"/><stop offset="1" stop-color="${dark}" stop-opacity=".95"/></radialGradient></defs>
+    <g filter="url(#${id}f)"><ellipse cx="30" cy="28" rx="${r + 1}" ry="${r - 1}" fill="url(#${id}g)"/><ellipse cx="30" cy="28" rx="${r + 1}" ry="${r - 1}" fill="none" stroke="${dark}" stroke-width="1.6" opacity=".55"/></g>${dots}</svg>`;
+}
+const MORE_SVG = `<svg class="blob" viewBox="0 0 60 56" aria-hidden="true"><ellipse cx="30" cy="28" rx="19" ry="17" fill="none" stroke="#b9aea0" stroke-width="1.5" stroke-dasharray="3 3"/><text x="30" y="33" text-anchor="middle" font-size="16" fill="#8a8178">⋯</text></svg>`;
 function buildPalette() {
   palItems = PAINTS.map(p => p.k);
   if (freeMode) { const extra = SWATCHES.filter(s => save.dex[s.key]).sort((a, b) => save.dex[b.key] - save.dex[a.key]).slice(0, 16).map(s => ({ name: s.name, css: s.hex, pig: s.pig, conc: s.conc }));
@@ -560,9 +562,10 @@ function buildPalette() {
   pal.className = freeMode ? 'fpal' : 'palette';
   const isSel = p => typeof p === 'string' ? p === paint : (typeof paint !== 'string' && p.css === paint.css);
   pal.innerHTML = palItems.map((p, i) => { const css = typeof p === 'string' ? PAINTS.find(x => x.k === p).css : p.css, nm = typeof p === 'string' ? PAINTS.find(x => x.k === p).name : p.name;
-    return `<button class="paint" data-i="${i}" style="--c:${css}" aria-pressed="${isSel(p)}"><div class="well"><div class="cake"></div></div><span>${nm}</span></button>`; }).join('')
-    + (freeMode ? `<button class="paint" id="pMore"><div class="well"><div class="cake" style="--c:#efe9df;display:flex;align-items:center;justify-content:center;font-size:18px;color:#8a8178">⋯</div></div><span>${T('도감에서', 'More')}</span></button>` : '');
+    return `<button class="paint" data-i="${i}" aria-pressed="${isSel(p)}">${blobSVG(css, i * 7 + 3)}<span>${nm}</span></button>`; }).join('')
+    + (freeMode ? `<button class="paint" id="pMore">${MORE_SVG}<span>${T('도감에서', 'More')}</span></button>` : '');
 }
+try { const u = paperTex.toDataURL(); document.head.insertAdjacentHTML('beforeend', `<style>.palette, .fpal { background-image: linear-gradient(rgba(252,249,243,.6), rgba(252,249,243,.6)), url(${u}) !important; background-size: auto, 128px; }</style>`); } catch (e) {}
 buildPalette();
 pal.addEventListener('click', e => { if (e.target.closest('#pMore')) { openDex(s => { paint = { name: s.name, css: s.hex, pig: s.pig, conc: s.conc }; buildPalette(); }); return; }
   const b = e.target.closest('.paint'); if (!b) return; paint = palItems[+b.dataset.i]; if (probing) { probing = false; document.getElementById('probeBtn').setAttribute('aria-pressed', false); document.getElementById('hint').style.opacity = 0; } pal.querySelectorAll('.paint').forEach(x => x.setAttribute('aria-pressed', x === b)); });
