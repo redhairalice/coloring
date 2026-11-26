@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#efe9df">
+<meta name="author" content="빨간머리앨">
 <title>물감 한 방울</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -42,6 +43,7 @@ header .sp { flex: 1; }
 .sheet.help h3 { font-size: 14px; margin: 14px 0 4px; }
 .sheet.help ol, .sheet.help ul { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.55; color: var(--ink); }
 .sheet.help li { margin: 3px 0; }
+.copy { text-align: center; font-size: 11.5px; color: var(--muted); margin: 14px 0 0 !important; }
 .dropsTxt { font-size: 11.5px; color: var(--muted); margin-left: 4px; align-self: center; }
 .dropsTxt.out { color: var(--accent); font-weight: 700; }
 #palette.fpal { width: 100%; }
@@ -190,6 +192,7 @@ header .sp { flex: 1; }
     <li><b>작품</b>: 완성한 그림이 모이고, 이미지로 공유할 수 있어요.</li>
   </ul>
   <div class="row"><button class="primary" data-close>시작하기</button></div>
+  <p class="copy">© 2026 빨간머리앨. All rights reserved.</p>
 </div></div>
 <div class="modal" id="mResult" hidden><div class="sheet" id="resultBody"></div></div>
 <div class="modal" id="mDex" hidden><div class="sheet"><h2>색 도감</h2><p id="dexCount"></p><div class="dex" id="dexGrid"></div><div class="row"><button data-close>닫기</button></div></div></div>
@@ -708,6 +711,7 @@ function cardBlob(l, c, pct, when) {
   else { g.fillStyle = '#e2a93b'; const st = starsOf(pct); g.fillText('★'.repeat(st) + '☆'.repeat(3 - st), 90, 1275); g.fillStyle = '#8a8178'; g.fillText(`목표와 ${pct}% 닮음`, 260, 1275); }
   g.textAlign = 'right'; g.font = '700 38px -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif'; g.fillStyle = '#3b3530'; g.fillText('물감 한 방울', W - 90, 1215);
   g.font = '500 30px -apple-system, sans-serif'; g.fillStyle = '#8a8178'; g.fillText(new Date(when).toLocaleDateString('ko-KR'), W - 90, 1270);
+  g.font = '500 24px -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif'; g.fillStyle = '#a99f94'; g.textAlign = 'center'; g.fillText('© 빨간머리앨', W / 2, 1325);
   return new Promise(r => cv2.toBlob(b => r(b), 'image/png'));
 }
 const dlP = (window.claude && typeof window.claude.use === 'function') ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
@@ -955,6 +959,7 @@ function freeCard(sk, pp, when) {
   g.fillStyle = '#3b3530'; g.font = '700 50px -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif'; g.textAlign = 'left'; g.fillText(sk.name, 120, 1240);
   g.font = '500 32px -apple-system, sans-serif'; g.fillStyle = '#8a8178'; g.fillText('수채화 · ' + new Date(when).toLocaleDateString('ko-KR'), 120, 1292);
   g.textAlign = 'right'; g.font = '700 38px -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif'; g.fillStyle = '#3b3530'; g.fillText('물감 한 방울', W - 120, 1240);
+  g.font = '500 24px -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif'; g.fillStyle = '#a99f94'; g.textAlign = 'center'; g.fillText('© 빨간머리앨', W / 2, 1325);
   return new Promise(r => c.toBlob(b => r(b), 'image/png'));
 }
 document.getElementById('fDone').onclick = async () => {
